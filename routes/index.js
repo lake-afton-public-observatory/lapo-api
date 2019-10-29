@@ -12,7 +12,7 @@ const helpers = require('../lib/helpers');
 router.get('/', function(req, res, next) {
   const response = {
     message:
-      'Welcome to the Lake Afton Public Observatory API! To contribute, visit https://github.com/openwichita/lake-afton-api',
+      'Welcome to the Lake Afton Public Observatory API! To contribute, visit https://github.com/lake-afton-public-observatory/lapo-api',
   };
   res.json(response);
 });
@@ -22,7 +22,11 @@ router.get('/', function(req, res, next) {
 Returns hours in a "pretty-print" format, as well as an open and close time
 */
 router.get('/hours', function(req, res, next) {
+  // need upcoming Friday if current is not Friday or Saturday
   const currentTime = new Date();
+  if (currentTime.getDay()<5) {
+    currentTime.setDate(currentTime.getDate()+(5-currentTime.getDay()));
+  }
   const month = currentTime.getMonth() + 1;
   const response = {
     hours: {
@@ -34,7 +38,6 @@ router.get('/hours', function(req, res, next) {
   switch (month) {
     case 3:
     case 4:
-      response.hours.prettyHours = '8:30pm - 10:30pm';
       response.hours.open = '8:30pm';
       response.hours.close = '10:30pm';
       break;
@@ -42,13 +45,11 @@ router.get('/hours', function(req, res, next) {
     case 6:
     case 7:
     case 8:
-      response.hours.prettyHours = '9:00pm - 11:30pm';
       response.hours.open = '9:00pm';
       response.hours.close = '11:30pm';
       break;
     case 9:
     case 10:
-      response.hours.prettyHours = '8:30pm - 10:30pm';
       response.hours.open = '8:30pm';
       response.hours.close = '10:30pm';
       break;
@@ -56,11 +57,12 @@ router.get('/hours', function(req, res, next) {
     case 12:
     case 1:
     case 2:
-      response.hours.prettyHours = '7:30pm - 9:30pm';
       response.hours.open = '7:30pm';
       response.hours.close = '9:30pm';
       break;
   }
+  response.hours.prettyHours =
+    `${response.hours.open} – ${response.hours.close}`;
   res.json(response);
 });
 
