@@ -2,7 +2,7 @@
 
 # Lake Afton API
 An endpoint for getting data about Lake Afton Public Observatory
-http://api.lakeafton.com
+https://lapo-api.herokuapp.com
 
 ### Contribute
 
