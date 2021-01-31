@@ -31,6 +31,8 @@ If you have other any questions, you can reach out at sduncan@lakeafton.com
 
 ### Endpoints
 
+* [Current online documentation](https://documenter.getpostman.com/view/4549321/TW6zF76Q)
+
 * LAPO Specific -- These take no additional parameters, and are specific to use by Lake Afton Public Observatory
     * GET `/` -- returns a basic welcome message
     * GET `/hours` -- returns current hours of operation
