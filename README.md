@@ -19,14 +19,6 @@ You're gonna need node.js; this was written on v8.11.3. You'll also need Python 
 9. Upload to your fork
 10. Submit a pull request
 
-If you have access to the server you can deploy the code yourself:
-
-1. SSH to the server and log in
-2. cd /var/www/lake-afton-api/
-3. sudo git pull
-
-The Express server is using PM2 to stay running in the background. Check out the docs for PM2 if you have questions about that.
-
 If you have other any questions, you can reach out at sduncan@lakeafton.com
 
 ### Endpoints
