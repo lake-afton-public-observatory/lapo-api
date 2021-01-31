@@ -188,62 +188,6 @@ router.get('/planets2', async function(req, res, next) {
 
 /* sun
 
-Returns a list of certain important times for the position of the sun:
-nadir (local solar midnight), night end (astronomical dawn), astro twilight
-end (end of astronomical twilight/nautical dawn), sunrise, solar noon,
-sunset, astro twilight start (beginning of astronomical twilight/nautical
-dusk), night start (astronomical dusk).
-*/
-router.get('/sun', function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const currentTime = new Date();
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const response = {
-    times: {
-      nadir: '',
-      night_end: '',
-      astro_twilight_end: '',
-      sunrise: '',
-      solar_noon: '',
-      sunset: '',
-      astro_twilight_start: '',
-      night_start: '',
-    },
-  };
-  const times = suncalc.getTimes(currentTime, lat, lon);
-  /* TODO: check if current time is later than displayed time; update
-     to next day's time if this is the case */
-  response.times.nadir = moment(times.nadir)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.night_end = moment(times.nightEnd)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.astro_twilight_end = moment(times.nauticalDawn)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.sunrise = moment(times.sunrise)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.solar_noon = moment(times.solarNoon)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.sunset = moment(times.sunset)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.astro_twilight_start = moment(times.nauticalDusk)
-      .tz(tz)
-      .format('h:mma z');
-  response.times.night_start = moment(times.night)
-      .tz(tz)
-      .format('h:mma z');
-  res.json(response);
-});
-
-/* sun2
-
 Returns a structure containing the following data on the sun:
 - right ascension
 - declination
@@ -276,7 +220,7 @@ Returns a structure containing the following data on the sun:
 - nautical dusk (sun crosses 12° below horizion)
 - astronomical dusk (sun crosses 18° below horizion)
 */
-router.get('/sun2', async function(req, res, next) {
+router.get('/sun', async function(req, res, next) {
   const qs = helpers.parseQueryString(req.query);
   const lat = qs.lat || 37.62218579135644;
   const lon = qs.lon || -97.62695789337158;
@@ -309,59 +253,6 @@ router.get('/sun2', async function(req, res, next) {
 
 /* moon
 
-Returns times of moonrise, phase, moonset, and illumination percentage
-*/
-router.get('/moon', function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const currentTime = new Date();
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const lazy = 0.03;
-  const response = {
-    moonrise: '',
-    phase: '',
-    moonset: '',
-    illumination: 0,
-  };
-  const times = suncalc.getMoonTimes(currentTime, lat, lon);
-  const illum = suncalc.getMoonIllumination(currentTime);
-  /* Populate JSON construct */
-  /* TODO: check if current time is later than displayed time; update
-     to next day's time if this is the case */
-  response.moonrise = moment(times.rise)
-      .tz(tz)
-      .format('h:mma z');
-  response.moonset = moment(times.set)
-      .tz(tz)
-      .format('h:mma z');
-  response.illumination = (illum.fraction * 100)
-      .toPrecision(4) + ' %'; // percent illumnation
-  // get phase in common terms
-  if (illum.phase >= 1 - lazy || illum.phase <= 0 + lazy) {
-    response.phase = 'New Moon';
-  } else if (illum.phase < 0.25 - lazy) {
-    response.phase = 'Waxing Crescent';
-  } else if (illum.phase >= 0.25 - lazy && illum.phase <= 0.25 + lazy) {
-    response.phase = 'First Quarter';
-  } else if (illum.phase < 0.5 - lazy) {
-    response.phase = 'Waxing Gibbous';
-  } else if (illum.phase >= 0.5 - lazy && illum.phase <= 0.5 + lazy) {
-    response.phase = 'Full Moon';
-  } else if (illum.phase < 0.75 - lazy) {
-    response.phase = 'Waning Gibbous';
-  } else if (illum.phase >= 0.75 - lazy && illum.phase <= 0.75 + lazy) {
-    response.phase = 'Last Quarter';
-  } else if (illum.phase < 1 - lazy) {
-    response.phase = 'Waning Crescent';
-  } else {
-    response.phase = 'Green Cheese?';
-  }
-  res.json(response);
-});
-
-/* moon2
-
 Returns a structure containing the following data on the moon:
 - right ascension
 - declination
@@ -393,7 +284,7 @@ Returns a structure containing the following data on the moon:
 - set time (center of moon crosses horizon)
 - set azimuth
 */
-router.get('/moon2', async function(req, res, next) {
+router.get('/moon', async function(req, res, next) {
   const qs = helpers.parseQueryString(req.query);
   const lat = qs.lat || 37.62218579135644;
   const lon = qs.lon || -97.62695789337158;
