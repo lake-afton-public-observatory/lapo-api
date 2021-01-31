@@ -73,7 +73,7 @@ Returns a list of all planets visible, their altitude (above the horizon),
 distance from Earth in AU and in miles, visual magnitude, a description of the
 magnitude, and the constellation in which the planet can be found.
 */
-router.get('/planets', async function(req, res, next) {
+router.get('/visiblePlanets', async function(req, res, next) {
   const qs = helpers.parseQueryString(req.query);
   const lat = qs.lat || 37.62218579135644;
   const lon = qs.lon || -97.62695789337158;
@@ -146,7 +146,7 @@ Returns a structure containing the following data on *all* the planets:
 - set time
 - set azimuth
 */
-router.get('/planets2', async function(req, res, next) {
+router.get('/planets', async function(req, res, next) {
   const qs = helpers.parseQueryString(req.query);
   const lat = qs.lat || 37.62218579135644;
   const lon = qs.lon || -97.62695789337158;
