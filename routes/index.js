@@ -318,33 +318,36 @@ router.get('/moon', async function(req, res, next) {
 /* events
 
 Returns a list of upcoming events from the LAPO Google Calendar.
+
+Deprecated by SD on 8/2/21
+
 */
-router.get('/events', async function(req, res, next) {
-  const key = process.env.GoogleCalendarAPIKey;
-  const calendarId = process.env.GoogleCalendarId;
-  const data = await getEvents(calendarId, key);
-  try {
-    const events = data.items;
-    const eventsForDisplay = [];
+// router.get('/events', async function(req, res, next) {
+//   const key = process.env.GoogleCalendarAPIKey;
+//   const calendarId = process.env.GoogleCalendarId;
+//   const data = await getEvents(calendarId, key);
+//   try {
+//     const events = data.items;
+//     const eventsForDisplay = [];
 
-    events.forEach(function(event) {
-      const startDate = new Date(event.start.dateTime).toString();
-      const endDate = new Date(event.end.dateTime).toString();
-      const eventStruct = {
-        summary: event.summary,
-        description: event.description,
-        startTime: startDate,
-        endTime: endDate,
-        location: event.location,
-      };
-      eventsForDisplay.push(eventStruct);
-    });
+//     events.forEach(function(event) {
+//       const startDate = new Date(event.start.dateTime).toString();
+//       const endDate = new Date(event.end.dateTime).toString();
+//       const eventStruct = {
+//         summary: event.summary,
+//         description: event.description,
+//         startTime: startDate,
+//         endTime: endDate,
+//         location: event.location,
+//       };
+//       eventsForDisplay.push(eventStruct);
+//     });
 
-    res.json(eventsForDisplay);
-  } catch (e) {
-    console.error(e.name, e.message);
-  }
-});
+//     res.json(eventsForDisplay);
+//   } catch (e) {
+//     console.error(e.name, e.message);
+//   }
+// });
 
 /* schedule
 
