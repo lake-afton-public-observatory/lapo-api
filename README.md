@@ -4,9 +4,6 @@
 An endpoint for getting data about Lake Afton Public Observatory
 https://api.lakeafton.com
 
-# Documentation
-We maintain API docs at (https://documenter.getpostman.com/view/4549321/TW6zF76Q)[https://documenter.getpostman.com/view/4549321/TW6zF76Q]
-
 ### Contribute
 
 You're gonna need node.js; this was written on v8.11.3. You'll also need Python 3.5+; this was written with v3.7.2.
