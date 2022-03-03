@@ -12,5 +12,9 @@ app.listen(port, () => {
 });
 
 app.get('/', (req, res) => {
-    res.json({ abc: '123' });
+    const response = {
+        message:
+            'Welcome to the Lake Afton Public Observatory API! To contribute, visit https://github.com/lake-afton-public-observatory/lapo-api',
+    };
+    res.json(response);
 });
