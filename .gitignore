@@ -70,3 +70,9 @@ lib/skyfield_data/*
 *.sqlite
 keys.js
 .jsbeautifyrc
+
+# Build folder
+dist/
+
+# Misc
+pnpm-lock.yaml
