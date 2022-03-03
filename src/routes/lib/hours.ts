@@ -1,4 +1,4 @@
-interface Hours {
+export interface Hours {
     hours: {
         prettyHours: string;
         open: string;
