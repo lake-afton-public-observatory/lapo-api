@@ -1,0 +1,4 @@
+dist/
+.py
+__pycache__
+.txt
