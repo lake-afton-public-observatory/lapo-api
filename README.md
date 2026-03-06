@@ -6,15 +6,15 @@ https://api.lakeafton.com
 
 ## Contribute
 
-You're gonna need node.js; this was written on v8.11.3. You'll also need Python 3.5+; this was written with v3.7.2.
+You'll need node.js and Python 3.
 
 1. Make a fork
 2. Clone to your machine
 3. CD into the folder
-4. Fill out the .env file (use .env_example as a guideline)
-5. run ```npm install```
-6. run ```pip install -r requirements.txt```
-7. run ```npm start``` or ```nodemon start``` if you have nodemon installed.
+4. Run ```./setup.sh``` — this will copy `.env_example` to `.env`, run `npm install`, and install Python dependencies into a `.venv` virtual environment
+5. Fill out the `.env` file with your API keys
+6. Run ```npm start``` or ```nodemon start``` if you have nodemon installed
+7. Visit ```http://localhost:3000``` (or whatever `PORT` is set to in your `.env`)
 8. Write code
 9. Upload to your fork
 10. Submit a pull request
