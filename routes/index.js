@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
-const suncalc = require('suncalc');
 const moment = require('moment-timezone');
 const viewingSchedule = require('../lib/viewingSchedule');
 const astropical = require('../lib/astropical');
@@ -134,7 +133,7 @@ router.get('/planets', async function(req, res, next) {
     const elev = await helpers.getElevation(
         lat,
         lon,
-        process.env.GooglePlacesAPIKey
+        process.env.GooglePlacesAPIKey,
     );
     const weatherData = await helpers.getWeather(lat, lon, key);
     const pressure = weatherData.groundLevelPressure;
@@ -213,7 +212,7 @@ router.get('/sun', async function(req, res, next) {
     const elev = await helpers.getElevation(
         lat,
         lon,
-        process.env.GooglePlacesAPIKey
+        process.env.GooglePlacesAPIKey,
     );
     const weatherData = await helpers.getWeather(lat, lon, key);
     const pressure = weatherData.groundLevelPressure;
@@ -282,7 +281,7 @@ router.get('/moon', async function(req, res, next) {
     const elev = await helpers.getElevation(
         lat,
         lon,
-        process.env.GooglePlacesAPIKey
+        process.env.GooglePlacesAPIKey,
     );
     const weatherData = await helpers.getWeather(lat, lon, key);
     const pressure = weatherData.groundLevelPressure;
@@ -352,7 +351,7 @@ router.get('/whatsup', async function(req, res, next) {
     const elev = await helpers.getElevation(
         lat,
         lon,
-        process.env.GooglePlacesAPIKey
+        process.env.GooglePlacesAPIKey,
     );
     if (moment(start) > moment(end)) {
       end = start;
@@ -397,13 +396,13 @@ router.get(/whatsup[_-]next\/?/, async function(req, res, next) {
     const elev = await helpers.getElevation(
         lat,
         lon,
-        process.env.GooglePlacesAPIKey
+        process.env.GooglePlacesAPIKey,
     );
     const tz = 'America/Chicago';
     const currentDate = new Date();
     const upcomingSunday = new Date();
     upcomingSunday.setDate(
-        upcomingSunday.getDate() + ((0 + 7 - upcomingSunday.getDay()) % 7)
+        upcomingSunday.getDate() + ((0 + 7 - upcomingSunday.getDay()) % 7),
     );
     const Friday = moment(upcomingSunday)
         .subtract(2, 'days')
@@ -553,7 +552,9 @@ router.get('/iss-passes', async function(req, res, next) {
         process.env.GooglePlacesAPIKey);
     const tz = qs.tz || 'America/Chicago';
     const key = process.env.N2YOAPIKey;
-    const reply = await helpers.getObjectNextPass(25544, lat, lon, elev, tz, key);
+    const reply = await helpers.getObjectNextPass(
+        25544, lat, lon, elev, tz, key,
+    );
     res.json(reply);
   } catch (err) {
     console.error('Error in /iss-passes:', err.message);

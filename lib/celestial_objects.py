@@ -10,7 +10,7 @@ from typing import List, Tuple
 def read_file(filename: str, object_type: str) -> List[Tuple[ephem.Body, str]]:
     """Read the given file into a dictionary."""
     file_objects = {}
-    s = requests_cache.core.CachedSession(cache_name='./lib/cache',expire_after = 7 * 24 * 60 * 60, old_data_on_error = True) # 7*24*60*60=604800 seconds is one week
+    s = requests_cache.CachedSession(cache_name='./lib/cache', expire_after=7 * 24 * 60 * 60) # 7*24*60*60=604800 seconds is one week
     if re.match('http', filename):
         ask = s.get(filename)
         if ask.status_code == 200:
