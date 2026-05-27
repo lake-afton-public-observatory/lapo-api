@@ -24,3 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from app.routes import observatory
+app.include_router(observatory.router)
