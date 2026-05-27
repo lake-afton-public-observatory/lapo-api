@@ -1,0 +1,4 @@
+#LMC
+LMC|Large Magellenic Cloud,f|H,05:23:34.5,-69:45:22,0.9
+#SMC
+SMC|Small Magellenic Cloud,f|H,00:52:44.8,-72:49:43,2.7
