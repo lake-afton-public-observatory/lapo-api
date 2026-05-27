@@ -13,9 +13,11 @@ A REST API for [Lake Afton Public Observatory](https://www.lakeafton.com/) (LAPO
 1. Fork and clone the repo
 2. Run `./setup.sh` — this creates a virtual environment and installs dependencies
 3. Fill out `.env` with your API keys (see [API Keys](#api-keys) below)
-4. Run `uvicorn app.main:app --reload`
-5. Visit `http://localhost:8000` (or `http://localhost:$PORT` if `PORT` is set)
-6. Interactive API docs available at `http://localhost:8000/docs`
+4. Activate the virtual environment: `source .venv/bin/activate`
+5. Run `make run` (or `uvicorn app.main:app --reload --port 3333`)
+6. Visit `http://localhost:3333`
+7. Interactive API docs available at `http://localhost:3333/docs`
+8. Stop the server with `Ctrl+C`
 
 ### API Keys
 
@@ -28,10 +30,18 @@ The following API keys are needed in your `.env` file:
 | `NASAAPIKey` | [NASA API](https://api.nasa.gov/) |
 | `N2YOAPIKey` | [N2YO](https://www.n2yo.com/api/) — Satellite tracking |
 
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `make run` | Start the dev server on port 3333 with auto-reload |
+| `make test` | Run the test suite |
+| `make install` | Install Python dependencies |
+
 ### Running Tests
 
 ```
-python -m pytest tests/ -v
+make test
 ```
 
 ## Endpoints
