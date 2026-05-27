@@ -5,7 +5,6 @@ const suncalc = require('suncalc');
 const moment = require('moment-timezone');
 const viewingSchedule = require('../lib/viewingSchedule');
 const astropical = require('../lib/astropical');
-const getEvents = require('../lib/events');
 const helpers = require('../lib/helpers');
 
 /* home page. */
@@ -47,48 +46,53 @@ distance from Earth in AU and in miles, visual magnitude, a description of the
 magnitude, and the constellation in which the planet can be found.
 */
 router.get('/visiblePlanets', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const data = await astropical.getPlanetEphem(lat, lon);
-  // now we have the data
-  const planets = data.response;
-  if (planets !== undefined) {
-    const visiblePlanets = [];
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = qs.lat || 37.62218579135644;
+    const lon = qs.lon || -97.62695789337158;
+    const data = await astropical.getPlanetEphem(lat, lon);
+    // now we have the data
+    const planets = data.response;
+    if (planets !== undefined) {
+      const visiblePlanets = [];
 
-    planets.forEach(function(planet) {
-      if (planet.alt > 0) {
-        let brightness = '';
-        if (planet.mag > 6.5) {
-          brightness = 'not visible to naked eye';
-        } else if (planet.mag >= 2) {
-          brightness = 'dim';
-        } else if (planet.mag >= 1) {
-          brightness = 'average';
-        } else if (planet.mag >= 0) {
-          brightness = 'bright';
-        } else if (planet.mag >= -3) {
-          brightness = 'very bright';
-        } else {
-          brightness = 'extremely bright';
+      planets.forEach(function(planet) {
+        if (planet.alt > 0) {
+          let brightness = '';
+          if (planet.mag > 6.5) {
+            brightness = 'not visible to naked eye';
+          } else if (planet.mag >= 2) {
+            brightness = 'dim';
+          } else if (planet.mag >= 1) {
+            brightness = 'average';
+          } else if (planet.mag >= 0) {
+            brightness = 'bright';
+          } else if (planet.mag >= -3) {
+            brightness = 'very bright';
+          } else {
+            brightness = 'extremely bright';
+          }
+
+          const prettyPlanetStruct = {
+            name: planet.name,
+            altitudeDegrees: planet.alt,
+            distanceFromEarthAU: planet.au_earth,
+            distanceFromEarthMiles: (planet.au_earth * 149597870700) / 1609.344,
+            magnitude: planet.mag,
+            brightness: brightness,
+            constellation: planet.const,
+          };
+
+          visiblePlanets.push(prettyPlanetStruct);
         }
-
-        const prettyPlanetStruct = {
-          name: planet.name,
-          altitudeDegrees: planet.alt,
-          distanceFromEarthAU: planet.au_earth,
-          distanceFromEarthMiles: (planet.au_earth * 149597870700) / 1609.344,
-          magnitude: planet.mag,
-          brightness: brightness,
-          constellation: planet.const,
-        };
-
-        visiblePlanets.push(prettyPlanetStruct);
-      }
-    });
-    res.json(visiblePlanets);
-  } else {
-    res.json(data);
+      });
+      res.json(visiblePlanets);
+    } else {
+      res.json(data);
+    }
+  } catch (err) {
+    console.error('Error in /visiblePlanets:', err.message);
+    res.status(502).json({error: 'Failed to fetch planet data'});
   }
 });
 
@@ -120,43 +124,48 @@ Returns a structure containing the following data on *all* the planets:
 - set azimuth
 */
 router.get('/planets', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago'; // eslint-disable-line max-len
-  const date = qs.dt;
-  const key = process.env.OpenWeatherMapAPIKey;
-  const elev = await helpers.getElevation(
-      lat,
-      lon,
-      process.env.GooglePlacesAPIKey
-  );
-  const weatherData = await helpers.getWeather(lat, lon, key);
-  const pressure = weatherData.groundLevelPressure;
-  const temp = weatherData.temperature.celsius;
-  const data = {
-    lat: lat,
-    lon: lon,
-    elev: elev,
-    tz: tz,
-    body: [
-      'mercury',
-      'venus',
-      'mars',
-      'jupiter',
-      'saturn',
-      'uranus',
-      'neptune',
-      'pluto',
-    ],
-    pressure: pressure,
-    temp: temp,
-  };
-  if (qs.dt) {
-    data.date = date;
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = qs.lat || 37.62218579135644;
+    const lon = qs.lon || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago'; // eslint-disable-line max-len
+    const date = qs.dt;
+    const key = process.env.OpenWeatherMapAPIKey;
+    const elev = await helpers.getElevation(
+        lat,
+        lon,
+        process.env.GooglePlacesAPIKey
+    );
+    const weatherData = await helpers.getWeather(lat, lon, key);
+    const pressure = weatherData.groundLevelPressure;
+    const temp = weatherData.temperature.celsius;
+    const data = {
+      lat: lat,
+      lon: lon,
+      elev: elev,
+      tz: tz,
+      body: [
+        'mercury',
+        'venus',
+        'mars',
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+      ],
+      pressure: pressure,
+      temp: temp,
+    };
+    if (qs.dt) {
+      data.date = date;
+    }
+    const result = await helpers.pythonCall(data);
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /planets:', err.message);
+    res.status(502).json({error: 'Failed to fetch planet data'});
   }
-  const result = await helpers.pythonCall(data);
-  res.json(result);
 });
 
 /* sun
@@ -194,34 +203,39 @@ Returns a structure containing the following data on the sun:
 - astronomical dusk (sun crosses 18° below horizion)
 */
 router.get('/sun', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const date = moment(qs.dt).format();
-  const key = process.env.OpenWeatherMapAPIKey;
-  const elev = await helpers.getElevation(
-      lat,
-      lon,
-      process.env.GooglePlacesAPIKey
-  );
-  const weatherData = await helpers.getWeather(lat, lon, key);
-  const pressure = weatherData.groundLevelPressure;
-  const temp = weatherData.temperature.celsius;
-  const data = {
-    lat: lat,
-    lon: lon,
-    elev: elev,
-    tz: tz,
-    body: ['sun'],
-    pressure: pressure,
-    temp: temp,
-  };
-  if (qs.dt) {
-    data.date = date;
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = qs.lat || 37.62218579135644;
+    const lon = qs.lon || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago';
+    const date = moment(qs.dt).format();
+    const key = process.env.OpenWeatherMapAPIKey;
+    const elev = await helpers.getElevation(
+        lat,
+        lon,
+        process.env.GooglePlacesAPIKey
+    );
+    const weatherData = await helpers.getWeather(lat, lon, key);
+    const pressure = weatherData.groundLevelPressure;
+    const temp = weatherData.temperature.celsius;
+    const data = {
+      lat: lat,
+      lon: lon,
+      elev: elev,
+      tz: tz,
+      body: ['sun'],
+      pressure: pressure,
+      temp: temp,
+    };
+    if (qs.dt) {
+      data.date = date;
+    }
+    const result = await helpers.pythonCall(data);
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /sun:', err.message);
+    res.status(502).json({error: 'Failed to fetch sun data'});
   }
-  const result = await helpers.pythonCall(data);
-  res.json(result);
 });
 
 /* moon
@@ -258,69 +272,40 @@ Returns a structure containing the following data on the moon:
 - set azimuth
 */
 router.get('/moon', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const date = moment(qs.dt).format();
-  const key = process.env.OpenWeatherMapAPIKey;
-  const elev = await helpers.getElevation(
-      lat,
-      lon,
-      process.env.GooglePlacesAPIKey
-  );
-  const weatherData = await helpers.getWeather(lat, lon, key);
-  const pressure = weatherData.groundLevelPressure;
-  const temp = weatherData.temperature.celsius;
-  const data = {
-    lat: lat,
-    lon: lon,
-    elev: elev,
-    tz: tz,
-    body: ['moon'],
-    pressure: pressure,
-    temp: temp,
-  };
-  if (qs.dt) {
-    data.date = date;
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = qs.lat || 37.62218579135644;
+    const lon = qs.lon || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago';
+    const date = moment(qs.dt).format();
+    const key = process.env.OpenWeatherMapAPIKey;
+    const elev = await helpers.getElevation(
+        lat,
+        lon,
+        process.env.GooglePlacesAPIKey
+    );
+    const weatherData = await helpers.getWeather(lat, lon, key);
+    const pressure = weatherData.groundLevelPressure;
+    const temp = weatherData.temperature.celsius;
+    const data = {
+      lat: lat,
+      lon: lon,
+      elev: elev,
+      tz: tz,
+      body: ['moon'],
+      pressure: pressure,
+      temp: temp,
+    };
+    if (qs.dt) {
+      data.date = date;
+    }
+    const result = await helpers.pythonCall(data);
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /moon:', err.message);
+    res.status(502).json({error: 'Failed to fetch moon data'});
   }
-  const result = await helpers.pythonCall(data);
-  res.json(result);
 });
-
-/* events
-
-Returns a list of upcoming events from the LAPO Google Calendar.
-
-Deprecated by SD on 8/2/21
-
-*/
-// router.get('/events', async function(req, res, next) {
-//   const key = process.env.GoogleCalendarAPIKey;
-//   const calendarId = process.env.GoogleCalendarId;
-//   const data = await getEvents(calendarId, key);
-//   try {
-//     const events = data.items;
-//     const eventsForDisplay = [];
-
-//     events.forEach(function(event) {
-//       const startDate = new Date(event.start.dateTime).toString();
-//       const endDate = new Date(event.end.dateTime).toString();
-//       const eventStruct = {
-//         summary: event.summary,
-//         description: event.description,
-//         startTime: startDate,
-//         endTime: endDate,
-//         location: event.location,
-//       };
-//       eventsForDisplay.push(eventStruct);
-//     });
-
-//     res.json(eventsForDisplay);
-//   } catch (e) {
-//     console.error(e.name, e.message);
-//   }
-// });
 
 /* schedule
 
@@ -356,41 +341,46 @@ also includes the magnitude, rise time and set time (if applicable), sorted
 by magnitude from brightest to dimmest.
 */
 router.get('/whatsup', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = qs.lat || 37.62218579135644;
-  const lon = qs.lon || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const start = moment(qs.start).format();
-  let end = moment(qs.end).format();
-  const key = process.env.OpenWeatherMapAPIKey;
-  const elev = await helpers.getElevation(
-      lat,
-      lon,
-      process.env.GooglePlacesAPIKey
-  );
-  if (moment(start) > moment(end)) {
-    end = start;
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = qs.lat || 37.62218579135644;
+    const lon = qs.lon || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago';
+    const start = moment(qs.start).format();
+    let end = moment(qs.end).format();
+    const key = process.env.OpenWeatherMapAPIKey;
+    const elev = await helpers.getElevation(
+        lat,
+        lon,
+        process.env.GooglePlacesAPIKey
+    );
+    if (moment(start) > moment(end)) {
+      end = start;
+    }
+    const weatherData = await helpers.getWeather(lat, lon, key);
+    const pressure = weatherData.groundLevelPressure;
+    const temp = weatherData.temperature.celsius;
+    const data = {
+      lat: lat,
+      lon: lon,
+      elev: elev,
+      tz: tz,
+      mag: 6,
+      pressure: pressure,
+      temp: temp,
+    };
+    if (qs.start) {
+      data.date = start;
+    }
+    if (qs.end) {
+      data.end = end;
+    }
+    const result = await helpers.pythonCall(data);
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /whatsup:', err.message);
+    res.status(502).json({error: 'Failed to fetch sky data'});
   }
-  const weatherData = await helpers.getWeather(lat, lon, key);
-  const pressure = weatherData.groundLevelPressure;
-  const temp = weatherData.temperature.celsius;
-  const data = {
-    lat: lat,
-    lon: lon,
-    elev: elev,
-    tz: tz,
-    mag: 6,
-    pressure: pressure,
-    temp: temp,
-  };
-  if (qs.start) {
-    data.date = start;
-  }
-  if (qs.end) {
-    data.end = end;
-  }
-  const result = await helpers.pythonCall(data);
-  res.json(result);
 });
 
 /* whatsup-next
@@ -401,47 +391,52 @@ magnitude, rise time and set time (if applicable), sorted by magnitude from
 brightest to dimmest.
 */
 router.get(/whatsup[_-]next\/?/, async function(req, res, next) {
-  const lat = 37.62218579135644;
-  const lon = -97.62695789337158;
-  const elev = await helpers.getElevation(
-      lat,
-      lon,
-      process.env.GooglePlacesAPIKey
-  );
-  const tz = 'America/Chicago';
-  const currentDate = new Date();
-  const upcomingSunday = new Date();
-  upcomingSunday.setDate(
-      upcomingSunday.getDate() + ((0 + 7 - upcomingSunday.getDay()) % 7)
-  );
-  const Friday = moment(upcomingSunday)
-      .subtract(2, 'days')
-      .format('YYYY-MM-DD');
-  const Saturday = moment(upcomingSunday)
-      .subtract(1, 'days')
-      .format('YYYY-MM-DD');
-  const monthF = moment(Friday).month() + 1;
-  const hours = helpers.getObservatoryHours(monthF);
-  let open = hours.h24.open;
-  let close = hours.h24.close;
-  if (moment(Friday + 'T' + close).isAfter(currentDate)) {
-    open = Friday + 'T' + open;
-    close = Friday + 'T' + close;
-  } else {
-    open = Saturday + 'T' + open;
-    close = Saturday + 'T' + close;
+  try {
+    const lat = 37.62218579135644;
+    const lon = -97.62695789337158;
+    const elev = await helpers.getElevation(
+        lat,
+        lon,
+        process.env.GooglePlacesAPIKey
+    );
+    const tz = 'America/Chicago';
+    const currentDate = new Date();
+    const upcomingSunday = new Date();
+    upcomingSunday.setDate(
+        upcomingSunday.getDate() + ((0 + 7 - upcomingSunday.getDay()) % 7)
+    );
+    const Friday = moment(upcomingSunday)
+        .subtract(2, 'days')
+        .format('YYYY-MM-DD');
+    const Saturday = moment(upcomingSunday)
+        .subtract(1, 'days')
+        .format('YYYY-MM-DD');
+    const monthF = moment(Friday).month() + 1;
+    const hours = helpers.getObservatoryHours(monthF);
+    let open = hours.h24.open;
+    let close = hours.h24.close;
+    if (moment(Friday + 'T' + close).isAfter(currentDate)) {
+      open = Friday + 'T' + open;
+      close = Friday + 'T' + close;
+    } else {
+      open = Saturday + 'T' + open;
+      close = Saturday + 'T' + close;
+    }
+    const data = {
+      lat: lat,
+      lon: lon,
+      elev: elev,
+      tz: tz,
+      mag: 6,
+      date: open,
+      end: close,
+    };
+    const result = await helpers.pythonCall(data);
+    res.json(result);
+  } catch (err) {
+    console.error('Error in /whatsup-next:', err.message);
+    res.status(502).json({error: 'Failed to fetch sky data'});
   }
-  const data = {
-    lat: lat,
-    lon: lon,
-    elev: elev,
-    tz: tz,
-    mag: 6,
-    date: open,
-    end: close,
-  };
-  const result = await helpers.pythonCall(data);
-  res.json(result);
 });
 
 /* weather
@@ -454,13 +449,18 @@ relative humidity, visibility (in kilometers and miles), wind speed (in meters
 per second and miles per hour) and direction, cloud cover in percentage
 */
 router.get('/weather', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = parseFloat(qs.lat) || 37.62218579135644;
-  const lon = parseFloat(qs.lon) || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const key = process.env.OpenWeatherMapAPIKey;
-  const reply = await helpers.getWeather(lat, lon, key, tz);
-  res.json(reply);
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = parseFloat(qs.lat) || 37.62218579135644;
+    const lon = parseFloat(qs.lon) || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago';
+    const key = process.env.OpenWeatherMapAPIKey;
+    const reply = await helpers.getWeather(lat, lon, key, tz);
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /weather:', err.message);
+    res.status(502).json({error: 'Failed to fetch weather data'});
+  }
 });
 
 /* forecast
@@ -475,18 +475,28 @@ percentage. May include amount of anticipated precipitation in mm (snow water
 equivalent for snow).
 */
 router.get('/forecast', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const lat = parseFloat(qs.lat) || 37.62218579135644;
-  const lon = parseFloat(qs.lon) || -97.62695789337158;
-  const tz = qs.tz || 'America/Chicago';
-  const key = process.env.OpenWeatherMapAPIKey;
-  const reply = await helpers.getForecast(lat, lon, key, tz);
-  res.json(reply);
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const lat = parseFloat(qs.lat) || 37.62218579135644;
+    const lon = parseFloat(qs.lon) || -97.62695789337158;
+    const tz = qs.tz || 'America/Chicago';
+    const key = process.env.OpenWeatherMapAPIKey;
+    const reply = await helpers.getForecast(lat, lon, key, tz);
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /forecast:', err.message);
+    res.status(502).json({error: 'Failed to fetch forecast data'});
+  }
 });
 
 router.get('/mars-weather', async function(req, res, next) {
-  const reply = await helpers.getMarsWeather();
-  res.json(reply);
+  try {
+    const reply = await helpers.getMarsWeather();
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /mars-weather:', err.message);
+    res.status(502).json({error: 'Failed to fetch Mars weather data'});
+  }
 });
 
 /* iss
@@ -498,11 +508,16 @@ Accepts the following parameter(s) (see README for details):
 - tz
 */
 router.get('/iss', async function(req, res, next) {
-  const qs=helpers.parseQueryString(req.query);
-  const tz = qs.tz || 'America/Chicago';
-  const timestamp = moment(qs.dt);
-  const reply = await helpers.getObjectPosition(25544, timestamp, tz);
-  res.json(reply);
+  try {
+    const qs=helpers.parseQueryString(req.query);
+    const tz = qs.tz || 'America/Chicago';
+    const timestamp = moment(qs.dt);
+    const reply = await helpers.getObjectPosition(25544, timestamp, tz);
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /iss:', err.message);
+    res.status(502).json({error: 'Failed to fetch ISS data'});
+  }
 });
 
 /* iss-passes
@@ -529,16 +544,21 @@ Accepts the following parameter(s) (see README for details):
 - tz
 */
 router.get('/iss-passes', async function(req, res, next) {
-  const qs=helpers.parseQueryString(req.query);
-  const lat = parseFloat(qs.lat) || 37.62218579135644;
-  const lon = parseFloat(qs.lon) || -97.62695789337158;
-  const elev = await helpers.getElevation(lat,
-      lon,
-      process.env.GooglePlacesAPIKey);
-  const tz = qs.tz || 'America/Chicago';
-  const key = process.env.N2YOAPIKey;
-  const reply = await helpers.getObjectNextPass(25544, lat, lon, elev, tz, key);
-  res.json(reply);
+  try {
+    const qs=helpers.parseQueryString(req.query);
+    const lat = parseFloat(qs.lat) || 37.62218579135644;
+    const lon = parseFloat(qs.lon) || -97.62695789337158;
+    const elev = await helpers.getElevation(lat,
+        lon,
+        process.env.GooglePlacesAPIKey);
+    const tz = qs.tz || 'America/Chicago';
+    const key = process.env.N2YOAPIKey;
+    const reply = await helpers.getObjectNextPass(25544, lat, lon, elev, tz, key);
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /iss-passes:', err.message);
+    res.status(502).json({error: 'Failed to fetch ISS pass data'});
+  }
 });
 
 /* neo
@@ -547,14 +567,19 @@ Returns a JSON object of near earth objects for the next seven days, sorted
 by the distance from Earth of each object on each of those days.
 */
 router.get('/neo', async function(req, res, next) {
-  const qs = helpers.parseQueryString(req.query);
-  const tz = qs.tz || 'America/Chicago';
-  const key = process.env.NASAAPIKey;
-  let startDate = moment();
-  const endDate = startDate.clone().add(6, 'days').format('YYYY-MM-DD');
-  startDate = startDate.format('YYYY-MM-DD');
-  const reply = await helpers.getNEOList(startDate, endDate, tz, key);
-  res.json(reply);
+  try {
+    const qs = helpers.parseQueryString(req.query);
+    const tz = qs.tz || 'America/Chicago';
+    const key = process.env.NASAAPIKey;
+    let startDate = moment();
+    const endDate = startDate.clone().add(6, 'days').format('YYYY-MM-DD');
+    startDate = startDate.format('YYYY-MM-DD');
+    const reply = await helpers.getNEOList(startDate, endDate, tz, key);
+    res.json(reply);
+  } catch (err) {
+    console.error('Error in /neo:', err.message);
+    res.status(502).json({error: 'Failed to fetch near-Earth object data'});
+  }
 });
 
 module.exports = router;
