@@ -6,16 +6,16 @@ A REST API for [Lake Afton Public Observatory](https://www.lakeafton.com/) (LAPO
 
 ### Prerequisites
 
-- Node.js
-- Python 3
+- Python 3.11+
 
 ### Setup
 
 1. Fork and clone the repo
-2. Run `./setup.sh` — this copies `.env_example` to `.env`, installs npm packages, and sets up a Python virtual environment with dependencies
+2. Run `./setup.sh` — this creates a virtual environment and installs dependencies
 3. Fill out `.env` with your API keys (see [API Keys](#api-keys) below)
-4. Run `npm start` (or `npm run startdev` for auto-reloading via nodemon)
-5. Visit `http://localhost:3000` (or whatever `PORT` is set to in your `.env`)
+4. Run `uvicorn app.main:app --reload`
+5. Visit `http://localhost:8000` (or `http://localhost:$PORT` if `PORT` is set)
+6. Interactive API docs available at `http://localhost:8000/docs`
 
 ### API Keys
 
@@ -31,7 +31,7 @@ The following API keys are needed in your `.env` file:
 ### Running Tests
 
 ```
-npm test
+python -m pytest tests/ -v
 ```
 
 ## Endpoints
@@ -93,7 +93,7 @@ Most endpoints accept the following optional parameters:
 1. Fork the repo
 2. Create a feature branch
 3. Make your changes
-4. Run `npm test`
+4. Run `python -m pytest tests/ -v`
 5. Submit a pull request
 
 Questions? Reach out at sduncan@lakeafton.com
