@@ -108,7 +108,7 @@ def get_data(object_list: List[Tuple[ephem.Body, str]],
             data['earth_dist'] = {
                 'au': o.earth_distance,
                 'km': o.earth_distance * 149597870.700,
-                'mi': o.earth_distance * 149597870700 / 1604.344
+                'mi': o.earth_distance * 149597870700 / 1609.344
             }
             data['constellation'] = ephem.constellation(o)
             # date for calculations below
@@ -117,7 +117,7 @@ def get_data(object_list: List[Tuple[ephem.Body, str]],
                 data['sun_dist'] = {
                     'au': o.sun_distance,
                     'km': o.sun_distance * 149597870.700,
-                    'mi': o.sun_distance * 149597870700 / 1604.344
+                    'mi': o.sun_distance * 149597870700 / 1609.344
                 }
                 data['phase'] = o.phase
             if o.name == 'Moon': # special properties available for the moon
@@ -131,10 +131,10 @@ def get_data(object_list: List[Tuple[ephem.Body, str]],
                 data['next_solstice'] = (ephem.next_solstice(date)).datetime()
                 data['next_equinox'] = (ephem.next_equinox(date)).datetime()
         elif body_type == 'satellite': # special properties available for satellites
-            data['elev'] = {'m' :o.elevation, 'mi': o.elevation / 1604.344}
+            data['elev'] = {'m' :o.elevation, 'mi': o.elevation / 1609.344}
             data['eclipsed'] = o.eclipsed
             if location:
-                data['range'] = {'m': o.range, 'mi': o.range / 1604.344}
+                data['range'] = {'m': o.range, 'mi': o.range / 1609.344}
                 data['range_velocity'] = o.range_velocity
                 rise_time, rise_az, max_alt_time, max_alt, set_time, set_az = location.next_pass(o)
                 data['next_pass'] = {

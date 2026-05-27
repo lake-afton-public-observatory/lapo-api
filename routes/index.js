@@ -29,41 +29,14 @@ router.get('/hours', function(req, res, next) {
     currentTime.setDate(currentTime.getDate()+(dayAnchor-currentTime.getDay()));
   }
   const month = currentTime.getMonth() + 1;
+  const hours = helpers.getObservatoryHours(month);
   const response = {
     hours: {
-      prettyHours: '',
-      open: '',
-      close: '',
+      prettyHours: `${hours.display.open} – ${hours.display.close}`,
+      open: hours.display.open,
+      close: hours.display.close,
     },
   };
-  switch (month) {
-    case 3:
-    case 4:
-      response.hours.open = '8:30pm';
-      response.hours.close = '10:30pm';
-      break;
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-      response.hours.open = '9:00pm';
-      response.hours.close = '11:30pm';
-      break;
-    case 9:
-    case 10:
-      response.hours.open = '8:30pm';
-      response.hours.close = '10:30pm';
-      break;
-    case 11:
-    case 12:
-    case 1:
-    case 2:
-      response.hours.open = '7:30pm';
-      response.hours.close = '9:30pm';
-      break;
-  }
-  response.hours.prettyHours =
-    `${response.hours.open} – ${response.hours.close}`;
   res.json(response);
 });
 
@@ -448,31 +421,9 @@ router.get(/whatsup[_-]next\/?/, async function(req, res, next) {
       .subtract(1, 'days')
       .format('YYYY-MM-DD');
   const monthF = moment(Friday).month() + 1;
-  let open;
-  let close;
-  switch (monthF) {
-    case 11:
-    case 12:
-    case 1:
-    case 2:
-      open = '19:30';
-      close = '21:30';
-      break;
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-      open = '21:00';
-      close = '23:30';
-      break;
-    case 3:
-    case 4:
-    case 9:
-    case 10:
-      open = '20:30';
-      close = '22:30';
-      break;
-  }
+  const hours = helpers.getObservatoryHours(monthF);
+  let open = hours.h24.open;
+  let close = hours.h24.close;
   if (moment(Friday + 'T' + close).isAfter(currentDate)) {
     open = Friday + 'T' + open;
     close = Friday + 'T' + close;
@@ -599,8 +550,8 @@ router.get('/neo', async function(req, res, next) {
   const qs = helpers.parseQueryString(req.query);
   const tz = qs.tz || 'America/Chicago';
   const key = process.env.NASAAPIKey;
-  startDate = moment();
-  endDate = startDate.clone().add(6, 'days').format('YYYY-MM-DD');
+  let startDate = moment();
+  const endDate = startDate.clone().add(6, 'days').format('YYYY-MM-DD');
   startDate = startDate.format('YYYY-MM-DD');
   const reply = await helpers.getNEOList(startDate, endDate, tz, key);
   res.json(reply);
