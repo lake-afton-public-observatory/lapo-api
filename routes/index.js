@@ -6,6 +6,11 @@ const viewingSchedule = require('../lib/viewingSchedule');
 const astropical = require('../lib/astropical');
 const helpers = require('../lib/helpers');
 
+/* health check */
+router.get('/health', function(req, res, next) {
+  res.json({status: 'ok', uptime: process.uptime()});
+});
+
 /* home page. */
 router.get('/', function(req, res, next) {
   const response = {
