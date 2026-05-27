@@ -1,28 +1,103 @@
-[![Build Status](https://travis-ci.org/nessalc/lake-afton-api.svg?branch=master)](https://travis-ci.org/nessalc/lake-afton-api)
-
 # Lake Afton API
-An endpoint for getting data about Lake Afton Public Observatory
-https://api.lakeafton.com
 
-## Contribute
+A REST API for [Lake Afton Public Observatory](https://www.lakeafton.com/) (LAPO), providing astronomical data, weather conditions, and observatory information.
 
-You'll need node.js and Python 3.
+## Getting Started
 
-1. Make a fork
-2. Clone to your machine
-3. CD into the folder
-4. Run ```./setup.sh``` — this will copy `.env_example` to `.env`, run `npm install`, and install Python dependencies into a `.venv` virtual environment
-5. Fill out the `.env` file with your API keys
-6. Run ```npm start``` or ```nodemon start``` if you have nodemon installed
-7. Visit ```http://localhost:3000``` (or whatever `PORT` is set to in your `.env`)
-8. Write code
-9. Upload to your fork
-10. Submit a pull request
+### Prerequisites
 
-If you have other any questions, you can reach out at sduncan@lakeafton.com
+- Node.js
+- Python 3
+
+### Setup
+
+1. Fork and clone the repo
+2. Run `./setup.sh` — this copies `.env_example` to `.env`, installs npm packages, and sets up a Python virtual environment with dependencies
+3. Fill out `.env` with your API keys (see [API Keys](#api-keys) below)
+4. Run `npm start` (or `npm run startdev` for auto-reloading via nodemon)
+5. Visit `http://localhost:3000` (or whatever `PORT` is set to in your `.env`)
+
+### API Keys
+
+The following API keys are needed in your `.env` file:
+
+| Key | Source |
+|-----|--------|
+| `GooglePlacesAPIKey` | [Google Cloud Console](https://console.cloud.google.com/) — Elevation API |
+| `OpenWeatherMapAPIKey` | [OpenWeatherMap](https://openweathermap.org/api) |
+| `NASAAPIKey` | [NASA API](https://api.nasa.gov/) |
+| `N2YOAPIKey` | [N2YO](https://www.n2yo.com/api/) — Satellite tracking |
+
+### Running Tests
+
+```
+npm test
+```
 
 ## Endpoints
 
-* Current online documentation: [apidocs.lakeafton.com](http://apidocs.lakeafton.com)
+All endpoints default to the observatory's location (37.62N, 97.63W) and the `America/Chicago` timezone.
 
-***Note:*** the data provided at these endpoints is probably more than enough to get a hobbyist started, to at least get an object of interest in a finder scope. And while these numbers are at least mostly accurate, don't try to steer Hubble or launch a rocket to Neptune with them.
+### Common Query Parameters
+
+Most endpoints accept the following optional parameters:
+
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| `lat` | Latitude (-90 to 90) | `37.62` |
+| `lon` | Longitude (-180 to 180) | `-97.63` |
+| `tz` | Timezone (IANA format) | `America/Chicago` |
+| `dt` | Date/time (ISO 8601) | `2026-06-15T21:00:00` |
+
+### Observatory
+
+| Endpoint | Description | Parameters |
+|----------|-------------|------------|
+| `GET /hours` | Seasonal open/close times for the upcoming Saturday | none |
+| `GET /schedule` | Viewing schedule for the upcoming Friday/Saturday | none |
+
+### Celestial Bodies
+
+| Endpoint | Description | Parameters |
+|----------|-------------|------------|
+| `GET /planets` | Detailed ephemeris for all planets (RA, dec, rise/set, distance, phase) | `lat`, `lon`, `tz`, `dt` |
+| `GET /visiblePlanets` | Currently visible planets with brightness descriptions | `lat`, `lon` |
+| `GET /sun` | Sun position, rise/set, dawn/dusk times, next solstice/equinox | `lat`, `lon`, `tz`, `dt` |
+| `GET /moon` | Moon position, phase, illumination, rise/set, next phase dates | `lat`, `lon`, `tz`, `dt` |
+
+### Sky Visibility
+
+| Endpoint | Description | Parameters |
+|----------|-------------|------------|
+| `GET /whatsup` | Objects in the sky above a limiting magnitude during a time window | `lat`, `lon`, `tz`, `start`, `end` |
+| `GET /whatsup-next` | Objects visible during the next LAPO open hours | none |
+
+### Weather
+
+| Endpoint | Description | Parameters |
+|----------|-------------|------------|
+| `GET /weather` | Current conditions (temperature, wind, humidity, visibility, clouds) | `lat`, `lon`, `tz` |
+| `GET /forecast` | 3-hour interval forecast | `lat`, `lon`, `tz` |
+| `GET /mars-weather` | Current weather on Mars | none |
+
+### Satellites & Space
+
+| Endpoint | Description | Parameters |
+|----------|-------------|------------|
+| `GET /iss` | Current ISS position, altitude, and velocity | `tz`, `dt` |
+| `GET /iss-passes` | Upcoming visible ISS passes | `lat`, `lon`, `tz` |
+| `GET /neo` | Near-Earth objects for the next 7 days | `tz` |
+
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch
+3. Make your changes
+4. Run `npm test`
+5. Submit a pull request
+
+Questions? Reach out at sduncan@lakeafton.com
+
+## License
+
+[ISC](LICENSE)
