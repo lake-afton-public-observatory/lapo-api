@@ -6,16 +6,18 @@ A REST API for [Lake Afton Public Observatory](https://www.lakeafton.com/) (LAPO
 
 ### Prerequisites
 
-- Node.js
-- Python 3
+- Python 3.11+
 
 ### Setup
 
 1. Fork and clone the repo
-2. Run `./setup.sh` — this copies `.env_example` to `.env`, installs npm packages, and sets up a Python virtual environment with dependencies
+2. Run `./setup.sh` — this creates a virtual environment and installs dependencies
 3. Fill out `.env` with your API keys (see [API Keys](#api-keys) below)
-4. Run `npm start` (or `npm run startdev` for auto-reloading via nodemon)
-5. Visit `http://localhost:3000` (or whatever `PORT` is set to in your `.env`)
+4. Activate the virtual environment: `source .venv/bin/activate`
+5. Run `make run` (or `uvicorn app.main:app --reload --port 3333`)
+6. Visit `http://localhost:3333`
+7. Interactive API docs available at `http://localhost:3333/docs`
+8. Stop the server with `Ctrl+C`
 
 ### API Keys
 
@@ -28,10 +30,18 @@ The following API keys are needed in your `.env` file:
 | `NASAAPIKey` | [NASA API](https://api.nasa.gov/) |
 | `N2YOAPIKey` | [N2YO](https://www.n2yo.com/api/) — Satellite tracking |
 
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `make run` | Start the dev server on port 3333 with auto-reload |
+| `make test` | Run the test suite |
+| `make install` | Install Python dependencies |
+
 ### Running Tests
 
 ```
-npm test
+make test
 ```
 
 ## Endpoints
@@ -93,7 +103,7 @@ Most endpoints accept the following optional parameters:
 1. Fork the repo
 2. Create a feature branch
 3. Make your changes
-4. Run `npm test`
+4. Run `python -m pytest tests/ -v`
 5. Submit a pull request
 
 Questions? Reach out at sduncan@lakeafton.com
