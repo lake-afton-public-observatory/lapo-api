@@ -25,8 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routes import observatory, weather, satellites, neo
+from app.routes import observatory, weather, satellites, neo, celestial
 app.include_router(observatory.router)
 app.include_router(weather.router)
 app.include_router(satellites.router)
 app.include_router(neo.router)
+app.include_router(celestial.router)
