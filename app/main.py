@@ -25,5 +25,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routes import observatory
+from app.routes import observatory, weather
 app.include_router(observatory.router)
+app.include_router(weather.router)
