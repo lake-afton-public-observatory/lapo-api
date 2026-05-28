@@ -70,3 +70,7 @@ lib/skyfield_data/*
 *.sqlite
 keys.js
 .jsbeautifyrc
+
+# Skyfield JPL ephemeris files (downloaded on first run, ~17MB each)
+*.bsp
+data/catalog_cache*
