@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -12,7 +12,11 @@ limiter = Limiter(
     default_limits=["100/15minutes"],
 )
 
-app = FastAPI(title="Lake Afton API")
+app = FastAPI(
+    title="Lake Afton Public Observatory API",
+    version="1.0.0",
+    description="Real-time astronomical data, weather, and observatory information for Lake Afton Public Observatory and general use.",
+)
 app.state.limiter = limiter
 
 
@@ -39,8 +43,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(observatory.router)
-app.include_router(celestial.router)
-app.include_router(weather.router)
-app.include_router(satellites.router)
-app.include_router(neo.router)
+# Versioned routes
+app.include_router(observatory.router, prefix="/v1")
+app.include_router(celestial.router, prefix="/v1")
+app.include_router(weather.router, prefix="/v1")
+app.include_router(satellites.router, prefix="/v1")
+app.include_router(neo.router, prefix="/v1")
+
+# Legacy redirects — keep old paths working with 301
+_LEGACY_ROUTES = [
+    "/", "/health", "/hours", "/schedule",
+    "/planets", "/visiblePlanets", "/sun", "/moon", "/whatsup", "/whatsup-next", "/whatsup_next",
+    "/weather", "/forecast",
+    "/iss", "/iss-passes",
+    "/neo",
+]
+
+for _path in _LEGACY_ROUTES:
+    def _make_redirect(path: str):
+        async def _redirect(request: Request):
+            target = f"/v1{path}"
+            if request.url.query:
+                target += f"?{request.url.query}"
+            return RedirectResponse(url=target, status_code=301)
+        return _redirect
+
+    app.add_api_route(_path, _make_redirect(_path), methods=["GET"], include_in_schema=False)

@@ -4,4 +4,4 @@ from app.main import app
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    return TestClient(app, follow_redirects=True)
