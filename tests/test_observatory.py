@@ -30,3 +30,5 @@ def test_schedule(client):
     assert response.status_code == 200
     data = response.json()
     assert "schedule" in data
+    assert "message" in data
+    assert "lakeafton.com" in data["message"]

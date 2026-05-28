@@ -2,7 +2,6 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from app.config import DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ, OPENWEATHERMAP_API_KEY
 from app.services.weather_api import get_weather, get_forecast
-from app.services.mars_weather import get_mars_weather
 from app.utils import validate_lat, validate_lon
 
 router = APIRouter()
@@ -40,10 +39,3 @@ async def forecast(lat: str = None, lon: str = None, tz: str = None):
         return JSONResponse(status_code=502, content={"error": "Failed to fetch forecast data"})
 
 
-@router.get("/mars-weather")
-async def mars_weather():
-    try:
-        return get_mars_weather()
-    except Exception as e:
-        print(f"Error in /mars-weather: {e}")
-        return JSONResponse(status_code=502, content={"error": "Failed to fetch Mars weather data"})
