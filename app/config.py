@@ -20,5 +20,8 @@ _raw = os.getenv("LAPO_API_KEYS", "")
 LAPO_API_KEYS: set[str] = {k.strip() for k in _raw.split(",") if k.strip()}
 API_AUTH_ENABLED = bool(LAPO_API_KEYS)
 
+# Sentry error monitoring (optional — leave unset to disable)
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+
 # Server
 PORT = int(os.getenv("PORT", "3000"))

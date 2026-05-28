@@ -168,11 +168,12 @@ async def tonight():
         temp = (wx_data.get("temperature") or {}).get("celsius", 25)
         elev = get_elevation(lat, lon)
 
-        start_utc = open_dt.astimezone(pytz.utc)
-        close_utc = close_dt.astimezone(pytz.utc)
+        session_secs = (close_dt - open_dt).total_seconds()
+        mid_dt = open_dt + timedelta(seconds=session_secs / 2)
+        mid_utc = mid_dt.astimezone(pytz.utc)
 
-        location = get_location(str(lat), str(lon), elev, start_utc, temp=temp, pressure=pressure)
-        objects = whats_up(start_utc, close_utc, location, magnitude=6)
+        location = get_location(str(lat), str(lon), elev, mid_utc, temp=temp, pressure=pressure)
+        objects = whats_up(mid_utc, mid_utc + timedelta(minutes=1), location, magnitude=6)
 
         wu_module.tz = tz_name
         result["objects"] = json.loads(json.dumps(objects, cls=wu_module.Encoder))
