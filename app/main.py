@@ -43,29 +43,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Versioned routes
-app.include_router(observatory.router, prefix="/v1")
-app.include_router(celestial.router, prefix="/v1")
-app.include_router(weather.router, prefix="/v1")
-app.include_router(satellites.router, prefix="/v1")
-app.include_router(neo.router, prefix="/v1")
+# Versioned, namespaced routes
+app.include_router(observatory.router, prefix="/v1", tags=["observatory"])
+app.include_router(celestial.router,   prefix="/v1/celestial", tags=["celestial"])
+app.include_router(weather.router,     prefix="/v1/weather",   tags=["weather"])
+app.include_router(satellites.router,  prefix="/v1/satellites", tags=["satellites"])
+app.include_router(neo.router,         prefix="/v1/space",     tags=["space"])
 
-# Legacy redirects — keep old paths working with 301
-_LEGACY_ROUTES = [
-    "/", "/health", "/hours", "/schedule", "/tonight",
-    "/planets", "/visiblePlanets", "/sun", "/moon", "/whatsup", "/whatsup-next", "/whatsup_next",
-    "/weather", "/forecast",
-    "/iss", "/iss-passes",
-    "/neo",
-]
+# All legacy paths (pre-namespace) redirect permanently to their final destinations.
+# Two-level mapping: old_path → final_path
+_REDIRECTS = {
+    # Observatory (no namespace change, still under /v1)
+    "/":              "/v1/",
+    "/health":        "/v1/health",
+    "/hours":         "/v1/hours",
+    "/schedule":      "/v1/schedule",
+    "/tonight":       "/v1/tonight",
+    # Old flat /v1 paths → namespaced
+    "/v1/planets":        "/v1/celestial/planets",
+    "/v1/visiblePlanets": "/v1/celestial/visiblePlanets",
+    "/v1/sun":            "/v1/celestial/sun",
+    "/v1/moon":           "/v1/celestial/moon",
+    "/v1/whatsup":        "/v1/celestial/whatsup",
+    "/v1/whatsup-next":   "/v1/celestial/whatsup-next",
+    "/v1/whatsup_next":   "/v1/celestial/whatsup_next",
+    "/v1/weather":        "/v1/weather/current",
+    "/v1/forecast":       "/v1/weather/forecast",
+    "/v1/iss":            "/v1/satellites/iss",
+    "/v1/iss-passes":     "/v1/satellites/iss-passes",
+    "/v1/neo":            "/v1/space/neo",
+    # Root-level legacy → namespaced directly
+    "/planets":        "/v1/celestial/planets",
+    "/visiblePlanets": "/v1/celestial/visiblePlanets",
+    "/sun":            "/v1/celestial/sun",
+    "/moon":           "/v1/celestial/moon",
+    "/whatsup":        "/v1/celestial/whatsup",
+    "/whatsup-next":   "/v1/celestial/whatsup-next",
+    "/whatsup_next":   "/v1/celestial/whatsup_next",
+    "/weather":        "/v1/weather/current",
+    "/forecast":       "/v1/weather/forecast",
+    "/iss":            "/v1/satellites/iss",
+    "/iss-passes":     "/v1/satellites/iss-passes",
+    "/neo":            "/v1/space/neo",
+}
 
-for _path in _LEGACY_ROUTES:
-    def _make_redirect(path: str):
-        async def _redirect(request: Request):
-            target = f"/v1{path}"
-            if request.url.query:
-                target += f"?{request.url.query}"
-            return RedirectResponse(url=target, status_code=301)
-        return _redirect
 
-    app.add_api_route(_path, _make_redirect(_path), methods=["GET"], include_in_schema=False)
+def _make_redirect(target: str):
+    async def _redirect(request: Request):
+        url = target
+        if request.url.query:
+            url += f"?{request.url.query}"
+        return RedirectResponse(url=url, status_code=301)
+    return _redirect
+
+
+for _old, _new in _REDIRECTS.items():
+    app.add_api_route(_old, _make_redirect(_new), methods=["GET"], include_in_schema=False)

@@ -7,7 +7,7 @@ from app.utils import validate_lat, validate_lon
 router = APIRouter()
 
 
-@router.get("/weather")
+@router.get("/current")
 async def weather(lat: str = None, lon: str = None, tz: str = None):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT

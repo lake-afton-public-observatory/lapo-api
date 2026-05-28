@@ -51,6 +51,20 @@ def test_tonight(client):
 
 
 def test_legacy_redirect(client):
+    # Root-level paths still redirect to /v1/ observatory routes
     response = client.get("/health", follow_redirects=False)
     assert response.status_code == 301
     assert response.headers["location"] == "/v1/health"
+
+    # Old flat /v1/ paths redirect to namespaced routes
+    response = client.get("/v1/planets", follow_redirects=False)
+    assert response.status_code == 301
+    assert response.headers["location"] == "/v1/celestial/planets"
+
+    response = client.get("/v1/weather", follow_redirects=False)
+    assert response.status_code == 301
+    assert response.headers["location"] == "/v1/weather/current"
+
+    response = client.get("/v1/iss", follow_redirects=False)
+    assert response.status_code == 301
+    assert response.headers["location"] == "/v1/satellites/iss"
