@@ -1,3 +1,5 @@
+import time
+import logging
 import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
@@ -21,6 +23,13 @@ if SENTRY_DSN:
         send_default_pii=False,
     )
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%SZ",
+)
+logger = logging.getLogger("lapo")
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["100/15minutes"],
@@ -32,6 +41,22 @@ app = FastAPI(
     description="Real-time astronomical data, weather, and observatory information for Lake Afton Public Observatory and general use.",
 )
 app.state.limiter = limiter
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    ms = (time.perf_counter() - start) * 1000
+    logger.info(
+        '"%s %s" %s %.0fms %s',
+        request.method,
+        request.url.path,
+        response.status_code,
+        ms,
+        request.headers.get("x-forwarded-for", request.client.host if request.client else "-"),
+    )
+    return response
 
 
 @app.get("/sentry-debug", include_in_schema=False)
