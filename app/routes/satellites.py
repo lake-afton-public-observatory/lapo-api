@@ -5,7 +5,7 @@ from dateutil import parser as dateutil_parser
 
 from app.config import (
     DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ,
-    GOOGLE_PLACES_API_KEY, N2YO_API_KEY,
+    GOOGLE_PLACES_API_KEY,
 )
 from app.services.elevation import get_elevation
 from app.services.iss import get_iss_position, get_iss_passes
@@ -48,9 +48,10 @@ async def iss(
     "/iss-passes",
     summary="Upcoming ISS visible passes",
     description=(
-        "Returns the next 2 days of visible ISS passes over the given location "
-        "via the N2YO API. Each pass includes rise time, max altitude, azimuth, "
-        "and set time. Requires `N2YOAPIKey` to be configured."
+        "Returns the next 2 days of visible ISS passes over the given location. "
+        "TLE data is fetched from Celestrak (no API key required). Each pass includes "
+        "rise time, max altitude, azimuth, and set time. Only passes where the ISS "
+        "is sunlit and the observer is in darkness are returned."
     ),
 )
 async def iss_passes(
@@ -67,7 +68,7 @@ async def iss_passes(
             lon_f = DEFAULT_LON
         tz_name = tz or DEFAULT_TZ
         elev = get_elevation(lat_f, lon_f, GOOGLE_PLACES_API_KEY)
-        return get_iss_passes(lat_f, lon_f, elev, tz_name, N2YO_API_KEY)
+        return get_iss_passes(lat_f, lon_f, elev, tz_name)
     except Exception as e:
         print(f"Error in /satellites/iss-passes: {e}")
         return JSONResponse(status_code=502, content={"error": "Failed to fetch ISS pass data"})
