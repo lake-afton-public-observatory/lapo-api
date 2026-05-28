@@ -20,13 +20,13 @@ router = APIRouter()
 
 
 def _build_location(lat, lon, tz_name, dt_str=None):
-    """Build an ephem Observer with weather-based pressure/temp."""
+    """Build a Skyfield observer with weather-based pressure/temp."""
     elev = get_elevation(lat, lon, GOOGLE_PLACES_API_KEY)
     weather_data = get_weather(lat, lon, OPENWEATHERMAP_API_KEY)
     pressure = weather_data.get("groundLevelPressure")
     temp = weather_data.get("temperature", {}).get("celsius", 25)
 
-    date = datetime.datetime.now()
+    date = datetime.datetime.now(tz=pytz.utc)
     if dt_str:
         date = dateutil_parser.parse(dt_str)
     if date.tzinfo is None:
