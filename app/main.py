@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from slowapi import Limiter
@@ -6,6 +6,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.routes import observatory, celestial, weather, satellites, neo
+from app.auth import require_api_key
 
 limiter = Limiter(
     key_func=get_remote_address,
@@ -43,12 +44,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Versioned, namespaced routes
-app.include_router(observatory.router, prefix="/v1", tags=["observatory"])
-app.include_router(celestial.router,   prefix="/v1/celestial", tags=["celestial"])
-app.include_router(weather.router,     prefix="/v1/weather",   tags=["weather"])
-app.include_router(satellites.router,  prefix="/v1/satellites", tags=["satellites"])
-app.include_router(neo.router,         prefix="/v1/space",     tags=["space"])
+# Versioned, namespaced routes — auth dependency applied globally
+_auth = [Depends(require_api_key)]
+app.include_router(observatory.router, prefix="/v1",           tags=["observatory"], dependencies=_auth)
+app.include_router(celestial.router,   prefix="/v1/celestial", tags=["celestial"],   dependencies=_auth)
+app.include_router(weather.router,     prefix="/v1/weather",   tags=["weather"],     dependencies=_auth)
+app.include_router(satellites.router,  prefix="/v1/satellites", tags=["satellites"], dependencies=_auth)
+app.include_router(neo.router,         prefix="/v1/space",     tags=["space"],       dependencies=_auth)
 
 # All legacy paths (pre-namespace) redirect permanently to their final destinations.
 # Two-level mapping: old_path → final_path

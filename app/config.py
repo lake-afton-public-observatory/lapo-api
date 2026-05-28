@@ -8,11 +8,18 @@ DEFAULT_LAT = 37.62218579135644
 DEFAULT_LON = -97.62695789337158
 DEFAULT_TZ = "America/Chicago"
 
-# API keys
+# API keys (external services)
 GOOGLE_PLACES_API_KEY = os.getenv("GooglePlacesAPIKey", "")
 OPENWEATHERMAP_API_KEY = os.getenv("OpenWeatherMapAPIKey", "")
 NASA_API_KEY = os.getenv("NASAAPIKey", "")
 N2YO_API_KEY = os.getenv("N2YOAPIKey", "")
+
+# Optional consumer API key auth.
+# Set LAPO_API_KEYS to a comma-separated list of valid keys to enable enforcement.
+# When unset or empty, all requests are allowed (open mode).
+_raw = os.getenv("LAPO_API_KEYS", "")
+LAPO_API_KEYS: set[str] = {k.strip() for k in _raw.split(",") if k.strip()}
+API_AUTH_ENABLED = bool(LAPO_API_KEYS)
 
 # Server
 PORT = int(os.getenv("PORT", "3000"))
