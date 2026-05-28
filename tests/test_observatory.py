@@ -34,6 +34,22 @@ def test_schedule(client):
     assert "lakeafton.com" in data["message"]
 
 
+def test_tonight(client):
+    response = client.get("/v1/tonight")
+    assert response.status_code == 200
+    data = response.json()
+    assert "observatory" in data
+    obs = data["observatory"]
+    assert "openTonight" in obs
+    assert "sessionActive" in obs
+    assert "sessionDate" in obs
+    assert "hours" in obs
+    # weather/seeing/objects may be None without API keys — that's acceptable
+    assert "weather" in data
+    assert "seeing" in data
+    assert "objects" in data
+
+
 def test_legacy_redirect(client):
     response = client.get("/health", follow_redirects=False)
     assert response.status_code == 301

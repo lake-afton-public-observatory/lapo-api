@@ -52,7 +52,7 @@ app.include_router(neo.router, prefix="/v1")
 
 # Legacy redirects — keep old paths working with 301
 _LEGACY_ROUTES = [
-    "/", "/health", "/hours", "/schedule",
+    "/", "/health", "/hours", "/schedule", "/tonight",
     "/planets", "/visiblePlanets", "/sun", "/moon", "/whatsup", "/whatsup-next", "/whatsup_next",
     "/weather", "/forecast",
     "/iss", "/iss-passes",
