@@ -1,6 +1,6 @@
 import json
 import datetime
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 import pytz
 from dateutil import parser as dateutil_parser
@@ -17,6 +17,13 @@ from app.astronomy.whatsup import get_location, get_data, whats_up, OBJECT_DICT
 from app.utils import validate_lat, validate_lon, parse_date, get_observatory_hours
 
 router = APIRouter()
+
+_LAT_Q  = Query(None, description="Observer latitude in decimal degrees (default: LAPO 37.622°N)")
+_LON_Q  = Query(None, description="Observer longitude in decimal degrees (default: LAPO -97.627°W)")
+_TZ_Q   = Query(None, description="IANA timezone name, e.g. `America/Chicago` (default: LAPO timezone)")
+_DT_Q   = Query(None, description="ISO 8601 datetime for the calculation (default: now)")
+_ST_Q   = Query(None, description="ISO 8601 start datetime of the observation window (default: now)")
+_END_Q  = Query(None, description="ISO 8601 end datetime of the observation window (default: start)")
 
 
 def _build_location(lat, lon, tz_name, dt_str=None):
@@ -37,13 +44,23 @@ def _build_location(lat, lon, tz_name, dt_str=None):
 
 
 def _serialize(data, tz_name):
-    """Serialize response with datetime handling via the Encoder class."""
     wu.tz = tz_name
     return json.loads(json.dumps(data, cls=wu.Encoder))
 
 
-@router.get("/visiblePlanets")
-async def visible_planets(lat: str = None, lon: str = None):
+@router.get(
+    "/visiblePlanets",
+    summary="Currently visible planets",
+    description=(
+        "Returns all planets currently above the horizon at the given location, "
+        "with altitude, distance from Earth, magnitude, and a human-readable "
+        "brightness label (e.g. 'very bright', 'dim')."
+    ),
+)
+async def visible_planets(
+    lat: str = _LAT_Q,
+    lon: str = _LON_Q,
+):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT
         lon_f = validate_lon(lon) if lon else DEFAULT_LON
@@ -89,8 +106,21 @@ async def visible_planets(lat: str = None, lon: str = None):
         return JSONResponse(status_code=502, content={"error": "Failed to fetch planet data"})
 
 
-@router.get("/planets")
-async def planets(lat: str = None, lon: str = None, tz: str = None, dt: str = None):
+@router.get(
+    "/planets",
+    summary="All planet positions",
+    description=(
+        "Returns position and ephemeris data for all 8 planets plus Pluto, "
+        "including right ascension, declination, altitude, azimuth, magnitude, "
+        "distance from Earth and Sun, phase angle, and rise/transit/set times."
+    ),
+)
+async def planets(
+    lat: str = _LAT_Q,
+    lon: str = _LON_Q,
+    tz: str = _TZ_Q,
+    dt: str = _DT_Q,
+):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT
         lon_f = validate_lon(lon) if lon else DEFAULT_LON
@@ -102,8 +132,7 @@ async def planets(lat: str = None, lon: str = None, tz: str = None, dt: str = No
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
         bodies = ["mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"]
-        query_set = set(bodies) & set(OBJECT_DICT.keys())
-        query_list = [OBJECT_DICT[k] for k in query_set]
+        query_list = [OBJECT_DICT[k] for k in bodies if k in OBJECT_DICT]
         result = get_data(query_list, location)
         return _serialize(result, tz_name)
     except Exception as e:
@@ -111,8 +140,21 @@ async def planets(lat: str = None, lon: str = None, tz: str = None, dt: str = No
         return JSONResponse(status_code=502, content={"error": "Failed to fetch planet data"})
 
 
-@router.get("/sun")
-async def sun(lat: str = None, lon: str = None, tz: str = None, dt: str = None):
+@router.get(
+    "/sun",
+    summary="Sun position and twilight times",
+    description=(
+        "Returns the Sun's current position (altitude, azimuth, RA, Dec), magnitude, "
+        "and all twilight transition times: civil, nautical, and astronomical dawn/dusk, "
+        "plus USNO sunrise/sunset. Also includes next solstice and equinox."
+    ),
+)
+async def sun(
+    lat: str = _LAT_Q,
+    lon: str = _LON_Q,
+    tz: str = _TZ_Q,
+    dt: str = _DT_Q,
+):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT
         lon_f = validate_lon(lon) if lon else DEFAULT_LON
@@ -123,16 +165,28 @@ async def sun(lat: str = None, lon: str = None, tz: str = None, dt: str = None):
         tz_name = tz or DEFAULT_TZ
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
-        query_list = [OBJECT_DICT["sun"]]
-        result = get_data(query_list, location)
+        result = get_data([OBJECT_DICT["sun"]], location)
         return _serialize(result, tz_name)
     except Exception as e:
         print(f"Error in /sun: {e}")
         return JSONResponse(status_code=502, content={"error": "Failed to fetch sun data"})
 
 
-@router.get("/moon")
-async def moon(lat: str = None, lon: str = None, tz: str = None, dt: str = None):
+@router.get(
+    "/moon",
+    summary="Moon position and phase",
+    description=(
+        "Returns the Moon's current position, illumination percentage, phase name "
+        "(e.g. 'waxing gibbous'), and upcoming phase transition times: "
+        "next new moon, first quarter, full moon, and last quarter."
+    ),
+)
+async def moon(
+    lat: str = _LAT_Q,
+    lon: str = _LON_Q,
+    tz: str = _TZ_Q,
+    dt: str = _DT_Q,
+):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT
         lon_f = validate_lon(lon) if lon else DEFAULT_LON
@@ -143,16 +197,30 @@ async def moon(lat: str = None, lon: str = None, tz: str = None, dt: str = None)
         tz_name = tz or DEFAULT_TZ
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
-        query_list = [OBJECT_DICT["moon"]]
-        result = get_data(query_list, location)
+        result = get_data([OBJECT_DICT["moon"]], location)
         return _serialize(result, tz_name)
     except Exception as e:
         print(f"Error in /moon: {e}")
         return JSONResponse(status_code=502, content={"error": "Failed to fetch moon data"})
 
 
-@router.get("/whatsup")
-async def whatsup(lat: str = None, lon: str = None, tz: str = None, start: str = None, end: str = None):
+@router.get(
+    "/whatsup",
+    summary="Visible sky objects for a time window",
+    description=(
+        "Returns all Messier, Caldwell, and named star catalog objects brighter than "
+        "magnitude 6 that will be above the horizon between `start` and `end`. "
+        "Objects are sorted brightest-first. Each entry includes rise/set times "
+        "within the requested window where applicable."
+    ),
+)
+async def whatsup(
+    lat: str = _LAT_Q,
+    lon: str = _LON_Q,
+    tz: str = _TZ_Q,
+    start: str = _ST_Q,
+    end: str = _END_Q,
+):
     try:
         lat_f = validate_lat(lat) if lat else DEFAULT_LAT
         lon_f = validate_lon(lon) if lon else DEFAULT_LON
@@ -177,8 +245,16 @@ async def whatsup(lat: str = None, lon: str = None, tz: str = None, start: str =
         return JSONResponse(status_code=502, content={"error": "Failed to fetch sky data"})
 
 
-@router.get("/whatsup-next")
-@router.get("/whatsup_next")
+@router.get(
+    "/whatsup-next",
+    summary="Visible objects at the next LAPO session",
+    description=(
+        "Convenience endpoint that automatically calculates what will be visible "
+        "during the next Lake Afton Public Observatory open session (Friday or Saturday "
+        "evening). Returns the same format as `/whatsup` but requires no parameters."
+    ),
+)
+@router.get("/whatsup_next", include_in_schema=False)
 async def whatsup_next():
     try:
         lat = DEFAULT_LAT

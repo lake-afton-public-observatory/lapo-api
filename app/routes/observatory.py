@@ -20,7 +20,11 @@ router = APIRouter()
 _start_time = time.time()
 
 
-@router.get("/")
+@router.get(
+    "/",
+    summary="API root",
+    description="Returns a welcome message and link to the source repository.",
+)
 async def root():
     return {
         "message": "Welcome to the Lake Afton Public Observatory API! "
@@ -28,12 +32,23 @@ async def root():
     }
 
 
-@router.get("/health")
+@router.get(
+    "/health",
+    summary="Health check",
+    description="Returns API status and uptime in seconds.",
+)
 async def health():
     return {"status": "ok", "uptime": time.time() - _start_time}
 
 
-@router.get("/hours")
+@router.get(
+    "/hours",
+    summary="Observatory hours",
+    description=(
+        "Returns the operating hours for the upcoming Saturday session at Lake Afton "
+        "Public Observatory. Hours shift seasonally with sunset times."
+    ),
+)
 async def hours():
     now = datetime.now()
     day_anchor = 5  # Saturday
@@ -53,7 +68,14 @@ async def hours():
     }
 
 
-@router.get("/schedule")
+@router.get(
+    "/schedule",
+    summary="Viewing schedule",
+    description=(
+        "Weekly viewing program description. Live schedules are managed on "
+        "the observatory website — see the `message` field for a direct link."
+    ),
+)
 async def schedule():
     return {
         "schedule": None,
@@ -61,15 +83,23 @@ async def schedule():
     }
 
 
-@router.get("/tonight")
+@router.get(
+    "/tonight",
+    summary="Tonight's session snapshot",
+    description=(
+        "Aggregate endpoint that returns everything needed for tonight's viewing session "
+        "in a single call: observatory open/close status, current weather, seeing conditions "
+        "classified by cloud cover, and all celestial objects visible during open hours. "
+        "Weather and sky-object sections degrade gracefully to null if API keys are absent. "
+        "Defaults to the Lake Afton Public Observatory location."
+    ),
+)
 async def tonight():
-    """Aggregate endpoint: observatory status, weather, seeing conditions, and visible objects for tonight's session."""
     lat = DEFAULT_LAT
     lon = DEFAULT_LON
     tz_name = DEFAULT_TZ
     tz = pytz.timezone(tz_name)
 
-    # Determine the next open session (Fri or Sat)
     now = datetime.now()
     days_until_sunday = (6 - now.weekday()) % 7
     if days_until_sunday == 0:
@@ -97,7 +127,7 @@ async def tonight():
     open_dt = tz.localize(dateutil_parser.parse(f"{session_date}T{open_time}"))
     close_dt = tz.localize(dateutil_parser.parse(f"{session_date}T{close_time}"))
 
-    is_open_tonight = now.weekday() in (4, 5)  # Friday=4, Saturday=5
+    is_open_tonight = now.weekday() in (4, 5)
     session_active = open_dt <= now_local <= close_dt
 
     result = {
@@ -114,7 +144,6 @@ async def tonight():
         "objects": None,
     }
 
-    # Weather — degrades gracefully if API key missing
     try:
         wx = get_weather(lat, lon, OPENWEATHERMAP_API_KEY, tz_name)
         clouds = wx.get("clouds") or 0
@@ -133,7 +162,6 @@ async def tonight():
     except Exception:
         pass
 
-    # Sky objects — degrades gracefully if API keys missing
     try:
         wx_data = result["weather"] or {}
         pressure = wx_data.get("groundLevelPressure")
