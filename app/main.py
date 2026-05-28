@@ -34,6 +34,12 @@ app = FastAPI(
 app.state.limiter = limiter
 
 
+@app.get("/sentry-debug", include_in_schema=False)
+async def sentry_debug():
+    """Intentionally raises to verify Sentry error capture is working."""
+    raise RuntimeError("Sentry test error from lapo-api")
+
+
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
