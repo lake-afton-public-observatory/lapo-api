@@ -3,10 +3,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 from dateutil import parser as dateutil_parser
 
-from app.config import (
-    DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ,
-    GOOGLE_PLACES_API_KEY,
-)
+from app.config import DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ
 from app.services.elevation import get_elevation
 from app.services.iss import get_iss_position, get_iss_passes
 from app.utils import validate_lat, validate_lon
@@ -67,7 +64,7 @@ async def iss_passes(
         if lon_f is None:
             lon_f = DEFAULT_LON
         tz_name = tz or DEFAULT_TZ
-        elev = get_elevation(lat_f, lon_f, GOOGLE_PLACES_API_KEY)
+        elev = get_elevation(lat_f, lon_f)
         return get_iss_passes(lat_f, lon_f, elev, tz_name)
     except Exception as e:
         print(f"Error in /satellites/iss-passes: {e}")

@@ -21,14 +21,13 @@ A REST API for [Lake Afton Public Observatory](https://www.lakeafton.com/) (LAPO
 
 ### API Keys
 
-The following API keys are needed in your `.env` file:
+| Key | Source | Required for |
+|-----|--------|--------------|
+| `OpenWeatherMapAPIKey` | [OpenWeatherMap](https://openweathermap.org/api) | Weather, forecast, seeing conditions |
+| `NASAAPIKey` | [NASA API](https://api.nasa.gov/) | Near-Earth objects |
 
-| Key | Source |
-|-----|--------|
-| `GooglePlacesAPIKey` | [Google Cloud Console](https://console.cloud.google.com/) — Elevation API |
-| `OpenWeatherMapAPIKey` | [OpenWeatherMap](https://openweathermap.org/api) |
-| `NASAAPIKey` | [NASA API](https://api.nasa.gov/) |
-| `N2YOAPIKey` | [N2YO](https://www.n2yo.com/api/) — Satellite tracking |
+Elevation data is sourced from SRTM via `srtm.py` (no key needed — tiles are downloaded automatically on first use).
+ISS pass predictions use Skyfield + Celestrak TLE data (no key needed).
 
 ### Available Commands
 

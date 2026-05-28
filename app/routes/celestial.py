@@ -7,7 +7,7 @@ from dateutil import parser as dateutil_parser
 
 from app.config import (
     DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ,
-    GOOGLE_PLACES_API_KEY, OPENWEATHERMAP_API_KEY,
+    OPENWEATHERMAP_API_KEY,
 )
 from app.services.elevation import get_elevation
 from app.services.weather_api import get_weather
@@ -28,7 +28,7 @@ _END_Q  = Query(None, description="ISO 8601 end datetime of the observation wind
 
 def _build_location(lat, lon, tz_name, dt_str=None):
     """Build a Skyfield observer with weather-based pressure/temp."""
-    elev = get_elevation(lat, lon, GOOGLE_PLACES_API_KEY)
+    elev = get_elevation(lat, lon)
     weather_data = get_weather(lat, lon, OPENWEATHERMAP_API_KEY)
     pressure = weather_data.get("groundLevelPressure")
     temp = weather_data.get("temperature", {}).get("celsius", 25)

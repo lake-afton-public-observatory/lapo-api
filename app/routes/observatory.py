@@ -8,7 +8,7 @@ from dateutil import parser as dateutil_parser
 
 from app.config import (
     DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ,
-    GOOGLE_PLACES_API_KEY, OPENWEATHERMAP_API_KEY,
+    OPENWEATHERMAP_API_KEY,
 )
 from app.utils import get_observatory_hours
 from app.services.elevation import get_elevation
@@ -166,7 +166,7 @@ async def tonight():
         wx_data = result["weather"] or {}
         pressure = wx_data.get("groundLevelPressure")
         temp = (wx_data.get("temperature") or {}).get("celsius", 25)
-        elev = get_elevation(lat, lon, GOOGLE_PLACES_API_KEY)
+        elev = get_elevation(lat, lon)
 
         start_utc = open_dt.astimezone(pytz.utc)
         close_utc = close_dt.astimezone(pytz.utc)

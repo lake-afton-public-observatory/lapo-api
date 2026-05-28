@@ -9,7 +9,6 @@ DEFAULT_LON = -97.62695789337158
 DEFAULT_TZ = "America/Chicago"
 
 # API keys (external services)
-GOOGLE_PLACES_API_KEY = os.getenv("GooglePlacesAPIKey", "")
 OPENWEATHERMAP_API_KEY = os.getenv("OpenWeatherMapAPIKey", "")
 NASA_API_KEY = os.getenv("NASAAPIKey", "")
 N2YO_API_KEY = os.getenv("N2YOAPIKey", "")
