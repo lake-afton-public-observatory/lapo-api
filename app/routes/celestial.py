@@ -249,9 +249,11 @@ async def whatsup(
     "/whatsup-next",
     summary="Visible objects at the next LAPO session",
     description=(
-        "Convenience endpoint that automatically calculates what will be visible "
-        "during the next Lake Afton Public Observatory open session (Friday or Saturday "
-        "evening). Returns the same format as `/whatsup` but requires no parameters."
+        "Returns objects above the horizon at the midpoint of the next Lake Afton "
+        "Public Observatory open session (Friday or Saturday evening). "
+        "Using the session midpoint gives an accurate snapshot of what visitors "
+        "will actually see rather than the union of everything visible at any "
+        "point across the full session window."
     ),
 )
 @router.get("/whatsup_next", include_in_schema=False)
@@ -287,13 +289,20 @@ async def whatsup_next():
             open_str = f"{saturday_str}T{open_time}"
             close_str = f"{saturday_str}T{close_time}"
 
-        location, start_dt = _build_location(lat, lon, tz_name, open_str)
-        end_dt = dateutil_parser.parse(close_str)
-        if end_dt.tzinfo is None:
-            end_dt = pytz.timezone(tz_name).localize(end_dt)
-        end_dt = end_dt.astimezone(pytz.utc)
+        open_dt = dateutil_parser.parse(open_str)
+        if open_dt.tzinfo is None:
+            open_dt = pytz.timezone(tz_name).localize(open_dt)
+        close_dt = dateutil_parser.parse(close_str)
+        if close_dt.tzinfo is None:
+            close_dt = pytz.timezone(tz_name).localize(close_dt)
 
-        result = whats_up(start_dt, end_dt, location, magnitude=6)
+        # Compute objects visible at the midpoint of the session
+        session_len = (close_dt - open_dt).total_seconds()
+        mid_dt = open_dt + datetime.timedelta(seconds=session_len / 2)
+        mid_dt_utc = mid_dt.astimezone(pytz.utc)
+
+        location, _ = _build_location(lat, lon, tz_name, mid_dt.isoformat())
+        result = whats_up(mid_dt_utc, mid_dt_utc + datetime.timedelta(minutes=1), location, magnitude=6)
         return _serialize(result, tz_name)
     except Exception as e:
         print(f"Error in /whatsup-next: {e}")
