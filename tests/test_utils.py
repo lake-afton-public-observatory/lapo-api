@@ -1,3 +1,5 @@
+import pytest
+
 from app.utils import (
     celsius_to_fahrenheit,
     fahrenheit_to_celsius,
@@ -8,6 +10,7 @@ from app.utils import (
     get_observatory_hours,
     validate_lat,
     validate_lon,
+    parse_date,
 )
 
 
@@ -83,7 +86,58 @@ def test_validate_lat():
     assert validate_lat(None) is None
 
 
+def test_validate_lat_boundary_values():
+    assert validate_lat("90") == 90.0
+    assert validate_lat("-90") == -90.0
+    assert validate_lat("90.0001") is None
+    assert validate_lat("-90.0001") is None
+    assert validate_lat("not-a-number") is None
+
+
 def test_validate_lon():
     assert validate_lon("-97.6") == -97.6
     assert validate_lon("181") is None
     assert validate_lon(None) is None
+
+
+def test_validate_lon_boundary_values():
+    assert validate_lon("180") == 180.0
+    assert validate_lon("-180") == -180.0
+    assert validate_lon("180.0001") is None
+    assert validate_lon("-180.0001") is None
+    assert validate_lon("not-a-number") is None
+
+
+def test_observatory_hours_invalid_month_raises():
+    with pytest.raises(ValueError):
+        get_observatory_hours(13)
+    with pytest.raises(ValueError):
+        get_observatory_hours(0)
+
+
+def test_parse_date_localizes_a_naive_datetime_to_the_given_timezone():
+    dt = parse_date("2026-06-15T21:00:00", "America/Chicago")
+    assert dt is not None
+    assert dt.tzinfo is not None
+    assert dt.hour == 21
+
+
+def test_parse_date_preserves_an_already_timezone_aware_datetime():
+    # REGRESSION-SHAPED: an aware datetime must not be re-localized -- doing
+    # so would shift the instant in time, not just attach a timezone label.
+    dt = parse_date("2026-06-15T21:00:00+00:00", "America/Chicago")
+    assert dt is not None
+    assert dt.utcoffset() is not None
+    assert dt.utcoffset().total_seconds() == 0
+
+
+def test_parse_date_returns_none_for_an_unparseable_string():
+    assert parse_date("not a real date", "America/Chicago") is None
+
+
+def test_parse_date_returns_none_for_none_input():
+    assert parse_date(None, "America/Chicago") is None
+
+
+def test_parse_date_returns_none_for_an_unknown_timezone():
+    assert parse_date("2026-06-15T21:00:00", "Not/AZone") is None
