@@ -11,7 +11,6 @@ DEFAULT_TZ = "America/Chicago"
 # API keys (external services)
 OPENWEATHERMAP_API_KEY = os.getenv("OpenWeatherMapAPIKey", "")
 NASA_API_KEY = os.getenv("NASAAPIKey", "")
-N2YO_API_KEY = os.getenv("N2YOAPIKey", "")
 
 # Optional consumer API key auth.
 # Set LAPO_API_KEYS to a comma-separated list of valid keys to enable enforcement.
