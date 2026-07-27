@@ -482,9 +482,9 @@ def whats_up(start: datetime.datetime, end: datetime.datetime,
     }
 
 
-def get_phase_name(t, wiggle_days: float = 1.5) -> str:
+def get_phase_name(t) -> str:
     """Return the name of the moon's current phase."""
-    ts, eph = _get_ephemeris()
+    _, eph = _get_ephemeris()
     phase_ang = float(almanac.moon_phase(eph, t).degrees)
 
     if phase_ang < 10 or phase_ang > 350:
