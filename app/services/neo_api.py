@@ -20,7 +20,6 @@ def get_neo_list(start_date: str, end_date: str, tz_name: str, api_key: str) -> 
     for date_key, neos in data.get("near_earth_objects", {}).items():
         for neo in neos:
             neo.pop("links", None)
-            neo.pop("is_potentially_hazardous_asteroid", None)
             neo.pop("is_sentry_object", None)
             if neo.get("close_approach_data"):
                 ca = neo["close_approach_data"][0]
