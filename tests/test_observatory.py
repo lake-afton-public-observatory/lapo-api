@@ -1,3 +1,36 @@
+from datetime import datetime as real_datetime
+from unittest.mock import patch
+
+from app.config import DEFAULT_TZ
+
+
+def test_hours_uses_observatory_local_time_not_server_time(client):
+    # Regression test: /hours previously called datetime.now() with no
+    # timezone, which on a server running in UTC (e.g. Heroku) does not
+    # represent Lake Afton's local wall-clock time. That could make the
+    # endpoint compute the wrong "next Saturday" / month around day
+    # boundaries. Assert it now anchors on the observatory's local time zone.
+    with patch("app.routes.observatory.datetime") as mock_dt:
+        mock_dt.now.side_effect = lambda *a, **kw: real_datetime.now(*a, **kw)
+        client.get("/v1/hours")
+        assert mock_dt.now.called
+        args, kwargs = mock_dt.now.call_args
+        tz_arg = args[0] if args else kwargs.get("tz")
+        assert tz_arg is not None
+        assert str(tz_arg) == DEFAULT_TZ
+
+
+def test_tonight_uses_observatory_local_time_not_server_time(client):
+    with patch("app.routes.observatory.datetime") as mock_dt:
+        mock_dt.now.side_effect = lambda *a, **kw: real_datetime.now(*a, **kw)
+        client.get("/v1/tonight")
+        assert mock_dt.now.called
+        args, kwargs = mock_dt.now.call_args
+        tz_arg = args[0] if args else kwargs.get("tz")
+        assert tz_arg is not None
+        assert str(tz_arg) == DEFAULT_TZ
+
+
 def test_root(client):
     response = client.get("/v1/")
     assert response.status_code == 200

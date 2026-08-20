@@ -50,7 +50,11 @@ async def health():
     ),
 )
 async def hours():
-    now = datetime.now()
+    # Use the observatory's local wall-clock time, not the server's local time
+    # (which is UTC in production, e.g. on Heroku). Using datetime.now() directly
+    # would make "today"/"this weekday" wrong by several hours, which can flip
+    # which day (and therefore which month's hours) this endpoint reports.
+    now = datetime.now(pytz.timezone(DEFAULT_TZ)).replace(tzinfo=None)
     day_anchor = 5  # Saturday
     days_ahead = (day_anchor - now.weekday()) % 7
     if days_ahead == 0 and now.weekday() != day_anchor:
@@ -100,7 +104,11 @@ async def tonight():
     tz_name = DEFAULT_TZ
     tz = pytz.timezone(tz_name)
 
-    now = datetime.now()
+    # Use the observatory's local wall-clock time, not the server's local time
+    # (which is UTC in production). Otherwise "now" can land on the wrong
+    # weekday, which flips whether tonight's session is open/active and which
+    # date (Friday vs. Saturday) is reported.
+    now = datetime.now(tz).replace(tzinfo=None)
     days_until_sunday = (6 - now.weekday()) % 7
     if days_until_sunday == 0:
         days_until_sunday = 7
