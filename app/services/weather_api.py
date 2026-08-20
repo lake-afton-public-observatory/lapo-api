@@ -85,7 +85,7 @@ def _reshape_weather_item(item: dict, tz_name: str = None) -> dict:
     return result
 
 
-@cached(cache=_weather_cache, key=lambda lat, lon, key, tz=None: (lat, lon))
+@cached(cache=_weather_cache, key=lambda lat, lon, key, tz=None: (lat, lon, tz))
 def get_weather(lat: float, lon: float, key: str, tz: str = None) -> dict:
     url = (
         f"http://api.openweathermap.org/data/2.5/weather"
@@ -97,7 +97,7 @@ def get_weather(lat: float, lon: float, key: str, tz: str = None) -> dict:
     return _reshape_weather_item(data, tz)
 
 
-@cached(cache=_forecast_cache, key=lambda lat, lon, key, tz=None: (lat, lon))
+@cached(cache=_forecast_cache, key=lambda lat, lon, key, tz=None: (lat, lon, tz))
 def get_forecast(lat: float, lon: float, key: str, tz: str = None) -> dict:
     url = (
         f"http://api.openweathermap.org/data/2.5/forecast"
