@@ -56,9 +56,10 @@ async def hours():
     # which day (and therefore which month's hours) this endpoint reports.
     now = datetime.now(pytz.timezone(DEFAULT_TZ)).replace(tzinfo=None)
     day_anchor = 5  # Saturday
+    # (day_anchor - now.weekday()) % 7 is 0 exactly when today already is
+    # day_anchor, so today's own hours are used (not next Saturday's) when
+    # the check falls on a Saturday.
     days_ahead = (day_anchor - now.weekday()) % 7
-    if days_ahead == 0 and now.weekday() != day_anchor:
-        days_ahead = 7
     if days_ahead > 0:
         now = now + timedelta(days=days_ahead)
     month = now.month
