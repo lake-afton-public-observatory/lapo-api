@@ -1,4 +1,6 @@
-from app.services.weather_api import _reshape_weather_item
+from unittest.mock import patch, MagicMock
+
+from app.services.weather_api import _reshape_weather_item, get_weather, _weather_cache
 
 
 def _base_item(**overrides):
@@ -93,3 +95,22 @@ def test_weather_array_empty_when_no_weather_entries():
     item = _base_item(weather=[])
     result = _reshape_weather_item(item)
     assert result["weather"] == []
+
+
+def test_get_weather_cache_is_keyed_by_timezone():
+    # get_weather is memoized by (lat, lon) alone in the cachetools @cached
+    # decorator's key function, but the reshaped response embeds the caller's
+    # tz in the "dt" field. Two requests for the same coordinates but
+    # different timezones must not share a cache entry, or the second
+    # caller silently gets the first caller's timezone in the response.
+    _weather_cache.clear()
+    item = _base_item(dt=1750000000)
+    mock_resp = MagicMock()
+    mock_resp.json.return_value = item
+    mock_resp.raise_for_status.return_value = None
+
+    with patch("app.services.weather_api.httpx.get", return_value=mock_resp):
+        chicago_result = get_weather(37.622, -97.627, "fake-key", tz="America/Chicago")
+        tokyo_result = get_weather(37.622, -97.627, "fake-key", tz="Asia/Tokyo")
+
+    assert chicago_result["dt"] != tokyo_result["dt"]
