@@ -33,6 +33,14 @@ async def iss(
         tz_name = tz or DEFAULT_TZ
         if dt:
             timestamp = dateutil_parser.parse(dt)
+            # A dt without an offset (e.g. "2024-01-01T12:00:00") parses to a
+            # naive datetime. datetime.timestamp() on a naive value is
+            # interpreted in the *server's* local timezone, not UTC -- unlike
+            # the default branch below, which is explicitly UTC-aware. Treat
+            # an offset-less dt as UTC so the epoch sent to WhereTheISS is
+            # correct regardless of what timezone the server happens to run in.
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=timezone.utc)
         else:
             timestamp = datetime.now(tz=timezone.utc)
         return get_iss_position(timestamp, tz_name)
