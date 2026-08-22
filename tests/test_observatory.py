@@ -158,3 +158,17 @@ def test_legacy_redirect(client):
     response = client.get("/v1/iss", follow_redirects=False)
     assert response.status_code == 301
     assert response.headers["location"] == "/v1/satellites/iss"
+
+
+def test_legacy_redirect_preserves_query_string(client):
+    # _make_redirect appends the original query string to the new location
+    # so callers hitting a legacy path with params (e.g. lat/lon/tz) don't
+    # silently lose them on redirect.
+    response = client.get("/v1/weather?lat=37.62&lon=-97.63", follow_redirects=False)
+    assert response.status_code == 301
+    assert response.headers["location"] == "/v1/weather/current?lat=37.62&lon=-97.63"
+
+    # No query string -- no trailing "?" appended.
+    response = client.get("/health", follow_redirects=False)
+    assert response.status_code == 301
+    assert response.headers["location"] == "/v1/health"
