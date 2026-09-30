@@ -14,7 +14,7 @@ from app.services.weather_api import get_weather
 from app.services.astropical import get_planet_ephem
 from app.astronomy import whatsup as wu
 from app.astronomy.whatsup import get_location, get_data, whats_up, OBJECT_DICT
-from app.utils import validate_lat, validate_lon, parse_date, get_observatory_hours
+from app.utils import resolve_lat_lon, parse_date, get_observatory_hours
 
 router = APIRouter()
 
@@ -62,12 +62,9 @@ async def visible_planets(
     lon: str = _LON_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
 
         data = get_planet_ephem(lat_f, lon_f)
         planets = data.get("response")
@@ -122,12 +119,9 @@ async def planets(
     dt: str = _DT_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
         tz_name = tz or DEFAULT_TZ
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
@@ -156,12 +150,9 @@ async def sun(
     dt: str = _DT_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
         tz_name = tz or DEFAULT_TZ
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
@@ -188,12 +179,9 @@ async def moon(
     dt: str = _DT_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
         tz_name = tz or DEFAULT_TZ
 
         location, _ = _build_location(lat_f, lon_f, tz_name, dt)
@@ -222,12 +210,9 @@ async def whatsup(
     end: str = _END_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
         tz_name = tz or DEFAULT_TZ
 
         location, date = _build_location(lat_f, lon_f, tz_name, start)

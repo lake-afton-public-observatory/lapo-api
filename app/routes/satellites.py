@@ -6,7 +6,7 @@ from dateutil import parser as dateutil_parser
 from app.config import DEFAULT_LAT, DEFAULT_LON, DEFAULT_TZ
 from app.services.elevation import get_elevation
 from app.services.iss import get_iss_position, get_iss_passes
-from app.utils import validate_lat, validate_lon
+from app.utils import resolve_lat_lon
 
 router = APIRouter()
 
@@ -65,12 +65,9 @@ async def iss_passes(
     tz: str = _TZ_Q,
 ):
     try:
-        lat_f = validate_lat(lat) if lat else DEFAULT_LAT
-        lon_f = validate_lon(lon) if lon else DEFAULT_LON
-        if lat_f is None:
-            lat_f = DEFAULT_LAT
-        if lon_f is None:
-            lon_f = DEFAULT_LON
+        lat_f, lon_f, lat_lon_err = resolve_lat_lon(lat, lon, DEFAULT_LAT, DEFAULT_LON)
+        if lat_lon_err:
+            return JSONResponse(status_code=400, content={"error": lat_lon_err})
         tz_name = tz or DEFAULT_TZ
         elev = get_elevation(lat_f, lon_f)
         return get_iss_passes(lat_f, lon_f, elev, tz_name)
