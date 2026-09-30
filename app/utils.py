@@ -158,6 +158,35 @@ def validate_lon(value) -> Optional[float]:
     return lon
 
 
+def resolve_lat_lon(lat, lon, default_lat: float, default_lon: float):
+    """Resolves lat/lon query params against defaults, returning (lat_f, lon_f, error).
+
+    `error` is a short string naming which param was invalid, or None if both
+    resolved successfully. Only a truly-omitted param (empty/None) falls back
+    to its default -- a param the client did supply but that fails validation
+    (out of range or unparseable) must produce an error, not silently swap in
+    the default location. Silently substituting the default for bad input
+    would hide the mistake from the client (e.g. a typo'd or out-of-range
+    coordinate would quietly return Lake Afton's own weather/sky data instead
+    of a 400, with nothing to signal that the input was ignored).
+    """
+    if lat:
+        lat_f = validate_lat(lat)
+        if lat_f is None:
+            return None, None, "Invalid lat parameter"
+    else:
+        lat_f = default_lat
+
+    if lon:
+        lon_f = validate_lon(lon)
+        if lon_f is None:
+            return None, None, "Invalid lon parameter"
+    else:
+        lon_f = default_lon
+
+    return lat_f, lon_f, None
+
+
 def parse_date(value: str, tz_name: str) -> Optional[datetime]:
     """Parse an ISO date string, localize if naive, return None on failure."""
     if value is None:

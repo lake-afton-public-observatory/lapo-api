@@ -11,6 +11,7 @@ from app.utils import (
     validate_lat,
     validate_lon,
     parse_date,
+    resolve_lat_lon,
 )
 
 
@@ -106,6 +107,33 @@ def test_validate_lon_boundary_values():
     assert validate_lon("180.0001") is None
     assert validate_lon("-180.0001") is None
     assert validate_lon("not-a-number") is None
+
+
+def test_resolve_lat_lon_falls_back_to_defaults_when_omitted():
+    lat, lon, err = resolve_lat_lon(None, None, 37.622, -97.627)
+    assert (lat, lon, err) == (37.622, -97.627, None)
+
+
+def test_resolve_lat_lon_accepts_valid_supplied_values():
+    lat, lon, err = resolve_lat_lon("40.0", "-90.0", 37.622, -97.627)
+    assert (lat, lon, err) == (40.0, -90.0, None)
+
+
+def test_resolve_lat_lon_errors_instead_of_silently_defaulting_bad_lat():
+    # REGRESSION: this used to silently substitute the default location for
+    # an out-of-range or unparseable lat, hiding the client's mistake instead
+    # of surfacing it.
+    lat, lon, err = resolve_lat_lon("999", "-90.0", 37.622, -97.627)
+    assert lat is None
+    assert lon is None
+    assert err == "Invalid lat parameter"
+
+
+def test_resolve_lat_lon_errors_instead_of_silently_defaulting_bad_lon():
+    lat, lon, err = resolve_lat_lon("40.0", "not-a-number", 37.622, -97.627)
+    assert lat is None
+    assert lon is None
+    assert err == "Invalid lon parameter"
 
 
 def test_observatory_hours_invalid_month_raises():

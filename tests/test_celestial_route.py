@@ -58,3 +58,18 @@ def test_visible_planets_returns_502_on_exception(client):
         resp = client.get("/v1/celestial/visiblePlanets")
     assert resp.status_code == 502
     assert "error" in resp.json()
+
+
+def test_visible_planets_returns_400_for_an_out_of_range_lat(client):
+    # REGRESSION: an invalid supplied lat used to be silently swapped for the
+    # default LAPO latitude instead of rejected -- the client would quietly
+    # get Lake Afton's own sky data with no indication their input was ignored.
+    resp = client.get("/v1/celestial/visiblePlanets", params={"lat": "999"})
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "Invalid lat parameter"
+
+
+def test_visible_planets_returns_400_for_an_unparseable_lon(client):
+    resp = client.get("/v1/celestial/visiblePlanets", params={"lon": "not-a-number"})
+    assert resp.status_code == 400
+    assert resp.json()["error"] == "Invalid lon parameter"
