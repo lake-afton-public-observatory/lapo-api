@@ -263,7 +263,14 @@ async def whatsup_next():
         lon = DEFAULT_LON
         tz_name = DEFAULT_TZ
 
-        now = datetime.datetime.now()
+        # Use the observatory's local wall-clock time, not the server's local
+        # time (which is UTC in production). Using datetime.now() directly --
+        # then immediately treating the result as if it already were the
+        # observatory's local time (weekday arithmetic below, and
+        # pytz.timezone(tz_name).localize(now) further down) -- would make
+        # "today"/"this weekday" wrong near local midnight, same bug class
+        # already fixed for /hours and /tonight in observatory.py.
+        now = datetime.datetime.now(pytz.timezone(tz_name)).replace(tzinfo=None)
         days_until_sunday = (6 - now.weekday()) % 7
         if days_until_sunday == 0:
             days_until_sunday = 7
