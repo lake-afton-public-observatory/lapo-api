@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
@@ -24,7 +25,12 @@ async def neo(
 ):
     try:
         tz_name = tz or DEFAULT_TZ
-        start = datetime.now()
+        # datetime.now() returns the server's local clock (UTC in production),
+        # not the requested tz's wall-clock time -- near local midnight this
+        # shifts the 7-day window's start date by a day relative to what the
+        # caller actually meant by "today". Same bug class already fixed for
+        # /hours, /tonight, and /whatsup-next.
+        start = datetime.now(pytz.timezone(tz_name)).replace(tzinfo=None)
         end = start + timedelta(days=6)
         return get_neo_list(
             start.strftime("%Y-%m-%d"),
